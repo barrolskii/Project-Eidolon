@@ -1,15 +1,46 @@
 ==============================
+Phantom 
+==============================
+[Features]
+Standard library:
+	- Math
+	-- Vectors
+	-- Matricies
+
+	- Strings
+
+	- Collections
+	-- Dictionary or Map (Same thing just different name)
+	-- Lists
+
+
+[Syntax]
+
+
+==============================
 PowerShell
 ==============================
+[Features]
+Contains operator for arrays. This will be useful for strings, ints, floats,
+ect.
 
 
 
 ==============================
 Lua
 ==============================
-
+[Features]
 
 
 ==============================
 Ruby?
 ==============================
+
+
+
+==============================
+Python
+==============================
+[Features]
+
+
