@@ -1,0 +1,28 @@
+= Phantom syntax: Alpha version 1 =
+
+== Keywords ==
+* if
+* else
+* loop
+* switch
+* case
+
+== Data types ==
+* int
+* uint
+* float
+* double
+* char
+* string
+
+== Collections ==
+* Array
+* Hashtable
+* Dictionary
+
+== Standard library ==
+* Vector
+* Matrix
+* Big int
+* Big float -- This is a maybe
+
