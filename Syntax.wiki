@@ -1,17 +1,15 @@
 = Phantom syntax: Alpha version 1 =
 
+This is for Phantom implemented in Golang
+
 == Keywords ==
 * if
 * else
 * loop
-* switch
-* case
 
 == Data types ==
 * int
-* uint
 * float
-* double
 * char
 * string
 
