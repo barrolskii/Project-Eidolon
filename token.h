@@ -53,6 +53,8 @@ typedef enum {
     RETURN,
     BREAK,
     CONTINUE,
+    TRUE,
+    FALSE,
 
     ARRAY,
     HASHTABLE,
@@ -106,17 +108,11 @@ char *type_literals[] = {
     "RETURN",
     "BREAK",
     "CONTINUE",
+    "TRUE",
+    "FALSE",
 
     "ARRAY",
     "HASHTABLE",
-};
-
-char *keywords[] = {
-    "var",
-    "if",
-    "else",
-    "loop",
-    "func",
 };
 
 struct token {
@@ -139,6 +135,8 @@ token_type_t get_identifier(const char *i)
     if (strcmp(i, "return") == 0) return RETURN;
     if (strcmp(i, "break") == 0) return BREAK;
     if (strcmp(i, "continue") == 0) return CONTINUE;
+    if (strcmp(i, "true") == 0) return TRUE;
+    if (strcmp(i, "false") == 0) return FALSE;
 
     return IDENT;
 }

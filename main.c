@@ -31,6 +31,14 @@ void read_char(struct lexer* l)
     l->read_pos++;
 }
 
+char peek_char(struct lexer *l)
+{
+    if (l->read_pos >= strlen(l->input))
+        return 0;
+    else
+        return l->input[l->read_pos];
+}
+
 char *read_digit(struct lexer *l)
 {
     int pos = l->pos;
@@ -83,13 +91,14 @@ struct lexer* init_lexer(char *input)
 }
 
 
-struct token* new_token(token_type_t t, char literal)
+struct token* new_token(token_type_t t, char *literal)
 {
     struct token* tok = malloc(sizeof(struct token));
     tok->type = t;
-    tok->literal = malloc(sizeof(char) * 2);
-    tok->literal[0] = literal;
-    tok->literal[1] = '\0';
+    tok->literal = malloc(sizeof(char) * strlen(literal) + 1);
+    strcpy(tok->literal, literal);
+    //tok->literal[0] = literal;
+    //tok->literal[strlen(literal) + 1] = '\0';
 
     return tok;
 }
@@ -109,37 +118,76 @@ struct token* next_token(struct lexer* l)
     switch (l->ch)
     {
     case '=':
-        tok = new_token(ASSIGN, '=');
-        break;
+        if (peek_char(l) == '=')
+        {
+            tok = new_token(EQ, "==");
+            read_char(l);
+            break;
+        }
+        else
+        {
+            tok = new_token(ASSIGN, "=");
+            break;
+        }
     case '+':
-        tok = new_token(PLUS, '+');
+        tok = new_token(PLUS, "+");
         break;
+    case '-':
+        tok = new_token(MINUS, "-");
+        break;
+    case '/':
+        tok = new_token(DIVIDE, "/");
+        break;
+    case '*':
+        tok = new_token(MULTIPLY, "*");
+        break;
+    case '%':
+        tok = new_token(MODULO, "%");
+        break;
+    case '!':
+        if (peek_char(l) == '=')
+        {
+            tok = new_token(NE, "!=");
+            read_char(l);
+            break;
+        }
+        else
+        {
+            tok = new_token(BANG, "!");
+            break;
+        }
     case ',':
-        tok = new_token(COMMA, ',');
+        tok = new_token(COMMA, ",");
         break;
     case ';':
-        tok = new_token(SEMI_COLON, ';');
+        tok = new_token(SEMI_COLON, ";");
+        break;
+    case '<':
+        tok = new_token(LT, "<");
+        break;
+    case '>':
+        tok = new_token(GT, ">");
         break;
     case '(':
-        tok = new_token(LPAREN, '(');
+        tok = new_token(LPAREN, "(");
         break;
     case ')':
-        tok = new_token(RPAREN, ')');
+        tok = new_token(RPAREN, ")");
         break;
     case '{':
-        tok = new_token(LBRACE, '{');
+        tok = new_token(LBRACE, "{");
         break;
     case '}':
-        tok = new_token(RBRACE, '}');
+        tok = new_token(RBRACE, "}");
         break;
     case '[':
-        tok = new_token(LBRACKET, '[');
+        tok = new_token(LBRACKET, "[");
         break;
     case ']':
-        tok = new_token(RBRACKET, ']');
+        tok = new_token(RBRACKET, "]");
         break;
     case 0:
-        tok = new_token(END_OF_FILE, '\0');
+        tok = new_token(END_OF_FILE, "\0");
         break;
     default:
         if (is_letter(l->ch))
@@ -160,7 +208,8 @@ struct token* next_token(struct lexer* l)
         }
         else
         {
-            tok = new_token(ILLEGAL, l->ch);
+            //tok = new_token(ILLEGAL, strcat("", &l->ch));
+            tok = new_token(ILLEGAL, &l->ch);
         }
     }
 
@@ -175,7 +224,16 @@ int TestTokens()
         var add = func(x, y) { \
         x + y; \
         }; \
-        var result = add(five, ten);";
+        var result = add(five, ten); \
+        !-/*5; \
+        5 < 10 > 5; \
+        if (5 < 10) { \
+            return true; \
+        } else { \
+            return false; \
+        } \
+        10 == 10; \
+        10 != 9;";
 
     struct test {
         token_type_t type;
@@ -217,19 +275,56 @@ int TestTokens()
     { IDENT, "ten"},
     { RPAREN, ")"},
     { SEMI_COLON, ";"},
+    { BANG, "!"},
+    { MINUS, "-"},
+    { DIVIDE, "/"},
+    { MULTIPLY, "*"},
+    { INT, "5"},
+    { SEMI_COLON, ";"},
+    { INT, "5"},
+    { LT, "<"},
+    { INT, "10"},
+    { GT, ">"},
+    { INT, "5"},
+    { SEMI_COLON, ";"},
+    { IF, "if"},
+    { LPAREN, "("},
+    { INT, "5"},
+    { LT, "<"},
+    { INT, "10"},
+    { RPAREN, ")"},
+    { LBRACE, "{"},
+    { RETURN, "return"},
+    { TRUE, "true"},
+    { SEMI_COLON, ";"},
+    { RBRACE, "}"},
+    { ELSE, "else"},
+    { LBRACE, "{"},
+    { RETURN, "return"},
+    { FALSE, "false"},
+    { SEMI_COLON, ";"},
+    { RBRACE, "}"},
+    { INT, "10"},
+    { EQ, "=="},
+    { INT, "10"},
+    { SEMI_COLON, ";"},
+    { INT, "10"},
+    { NE, "!="},
+    { INT, "9"},
+    { SEMI_COLON, ";"},
     { END_OF_FILE, ""},
 };
 
     struct lexer *l = init_lexer(input);
     struct token *tok = NULL;
 
-    for (int i = 0; i < 37; i++)
+    for (int i = 0; i < 74; i++)
     {
         tok = next_token(l);
 
         if (tok->type != tests[i].type)
         {
-            printf("tests[%d] - incorrect token type. Expected %s, got %s\n",
+            printf("tests[%d] - incorrect token type. Expected %s, got %s.\n",
                    i, get_type_literal(tests[i].type), get_type_literal(tok->type));
 
             free(tok->literal);
@@ -239,7 +334,7 @@ int TestTokens()
 
         if (strcmp(tok->literal, tests[i].expected_literal))
         {
-            printf("tests[%d] - incorrect literal. Expected %s, got %s\n",
+            printf("tests[%d] - incorrect literal. Expected %s, got %s.\n",
                    i, tests[i].expected_literal, tok->literal);
 
             free(tok->literal);
@@ -312,7 +407,27 @@ int main(int argc, char** argv)
 {
     //TestNextToken();
 
-    TestTokens();
+    //TestTokens();
+
+    char input[1024] = {0};
+    struct lexer *l = NULL;
+    struct token *t = NULL;
+
+    while (1)
+    {
+        printf(">> ");
+        scanf("%s", input);
+
+        l = init_lexer(input);
+
+        for ( t = next_token(l); t->type != END_OF_FILE; t = next_token(l))
+        {
+            printf("%s -- %s\n", get_type_literal(t->type), t->literal);
+            free(t);
+        }
+
+        memset(input, 0, 1024);
+    }
 
     return 0;
 }
