@@ -104,11 +104,29 @@ struct token *next_token(lexer_t *l)
             break;
         }
     case '+':
-        tok = new_token(PLUS, "+");
-        break;
+    	if (lexer_peek_char(l) == '+')
+        {
+			tok = new_token(INCREMENT, "++");
+            lexer_read_char(l);
+            break;
+        }
+        else
+        {
+        	tok = new_token(PLUS, "+");
+        	break;
+        }
     case '-':
-        tok = new_token(MINUS, "-");
-        break;
+    	if (lexer_peek_char(l) == '-')
+        {
+			tok = new_token(DECREMENT, "--");
+            lexer_read_char(l);
+            break;
+        }
+        else
+        {
+        	tok = new_token(MINUS, "-");
+        	break;
+        }
     case '/':
         tok = new_token(DIVIDE, "/");
         break;
@@ -130,6 +148,30 @@ struct token *next_token(lexer_t *l)
             tok = new_token(BANG, "!");
             break;
         }
+    case '&':
+    	if (lexer_peek_char(l) == '&')
+        {
+			tok = new_token(AND, "&&");
+            lexer_read_char(l);
+            break;
+        }
+        else
+        {
+        	tok = new_token(ILLEGAL, &l->ch);
+            break;
+        }
+    case '|':
+    	if (lexer_peek_char(l) == '|')
+        {
+			tok = new_token(OR, "||");
+            lexer_read_char(l);
+            break;
+        }
+        else
+        {
+            tok = new_token(ILLEGAL, &l->ch);
+            break;
+        }
     case ',':
         tok = new_token(COMMA, ",");
         break;
@@ -137,11 +179,29 @@ struct token *next_token(lexer_t *l)
         tok = new_token(SEMI_COLON, ";");
         break;
     case '<':
-        tok = new_token(LT, "<");
-        break;
+    	if (lexer_peek_char(l) == '=')
+        {
+            tok = new_token(LT_EQ, "<=");
+            lexer_read_char(l);
+            break;
+        }
+        else
+        {
+            tok = new_token(LT, "<");
+            break;
+        }
     case '>':
-        tok = new_token(GT, ">");
-        break;
+        if (lexer_peek_char(l) == '=')
+        {
+            tok = new_token(GT_EQ, ">=");
+            lexer_read_char(l);
+            break;
+        }
+        else
+        {
+            tok = new_token(GT, ">");
+            break;
+        }
     case '(':
         tok = new_token(LPAREN, "(");
         break;

@@ -3,6 +3,9 @@ CC = gcc
 phantom:
 	$(CC) token.c lexer.c main.c -o phantom.exe
 
+test:
+	$(CC) token.c lexer.c test.c -o tests.exe
+
 #phantom: main.o lexer.o
 #	$(#CC) main.o lexer.o -o phantom.exe
 
