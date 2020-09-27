@@ -14,13 +14,14 @@ int main(int argc, char **argv)
     while (1)
     {
         //printf(">> ");
-        scanf("%s", input);
+        scanf("%1024s", input);
 
         l = lexer_init(input);
 
         for ( t = next_token(l); t->type != END_OF_FILE; t = next_token(l))
         {
             printf("%s -- %s\n", get_type_literal(t->type), t->literal);
+            free(t->literal);
             free(t);
         }
 

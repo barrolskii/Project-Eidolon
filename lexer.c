@@ -1,8 +1,19 @@
 #include "lexer.h"
 
 int is_letter(char c) { return 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || c == '_'; }
-int is_digit(char c) { return '0' <= c && c <= '9'; }
+int is_digit (char c) { return '0' <= c && c <= '9' || c == '.'; }
 
+int str_cont(char c, char *str)
+{
+    char *curr_str = str;
+
+    while(*((curr_str)++) != '\0' )
+    {
+        if (*curr_str == c) return 1;
+    }
+
+    return 0;
+}
 
 lexer_t *lexer_init(char *input)
 {
@@ -238,11 +249,15 @@ struct token *next_token(lexer_t *l)
             tok->type = INT;
             tok->literal = lexer_read_digit(l);
 
+            if ( str_cont('.', tok->literal))
+                tok->type = FLOAT;
+            else
+                tok->type = INT;
+
             return tok;
         }
         else
         {
-            //tok = new_token(ILLEGAL, strcat("", &l->ch));
             tok = new_token(ILLEGAL, &l->ch);
         }
     }

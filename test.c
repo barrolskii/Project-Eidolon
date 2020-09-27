@@ -43,55 +43,66 @@
 
 typedef struct test
 {
-	token_type_t exp_t; /* Expected type */
-	char *literal;
+    token_type_t exp_t; /* Expected type */
+    char *literal;
 } test_t;
 
 int test_ident_and_types()
 {
-	char *input = "";
+    char *input =
+            "value \
+            1234 \
+            123.456 \
+            \"mystring\" \
+            'c'";
 
     test_t tests[] = {
-
+        {IDENT, "value" },
+        {INT, "1234" },
+        {FLOAT, "123.456" },
+        {STRING, "mystring" },
+        {CHAR, "c" },
     };
 
-	return 0;
+    ITR_TESTS(5)
+
+    return 0;
 }
 
 int test_operators()
 {
-	char *input = "=+-/*%!&&||++--,;(){}<>[]==!=<=>=";
+    char *input = "=+-/*%!&&||++--,;(){}<>[]==!=<=>=";
 
     test_t tests[] = {
-		{ ASSIGN, "=" },
-		{ PLUS, "+" },
-		{ MINUS, "-" },
-		{ DIVIDE, "/" },
-		{ MULTIPLY, "*" },
-		{ MODULO, "%" },
-		{ BANG, "!" },
+        { ASSIGN, "=" },
+        { PLUS, "+" },
+        { MINUS, "-" },
+        { DIVIDE, "/" },
+        { MULTIPLY, "*" },
+        { MODULO, "%" },
+        { BANG, "!" },
 
-		{ AND, "&&" },
-		{ OR, "||" },
-		{ INCREMENT, "++" },
-		{ DECREMENT, "--" },
+        { AND, "&&" },
+        { OR, "||" },
+        { INCREMENT, "++" },
+        { DECREMENT, "--" },
 
-		{ COMMA, "," },
-		{ SEMI_COLON, ";" },
+        { COMMA, "," },
+        { SEMI_COLON, ";" },
 
-		{ LPAREN, "(" },
-		{ RPAREN, ")" },
-		{ LBRACE, "{" },
-		{ RBRACE, "}" },
-		{ LT, "<" },
-		{ GT, ">" },
-		{ LBRACKET, "[" },
-		{ RBRACKET, "]" },
+        { LPAREN, "(" },
+        { RPAREN, ")" },
+        { LBRACE, "{" },
+        { RBRACE, "}" },
+        { LT, "<" },
+        { GT, ">" },
+        { LBRACKET, "[" },
+        { RBRACKET, "]" },
 
-		{ EQ, "==" },
-		{ NE, "!=" },
-		{ LT_EQ, "<=" },
-		{ GT_EQ, ">=" },
+        { EQ, "==" },
+        { NE, "!=" },
+        { LT_EQ, "<=" },
+        { GT_EQ, ">=" },
     };
 
 	ITR_TESTS(25)
@@ -101,18 +112,43 @@ int test_operators()
 
 int test_keywords()
 {
-	char *input = "";
+    char *input =
+        "var \
+        if \
+        else \
+        loop \
+        func \
+        return \
+        break \
+        continue \
+        true \
+        false";
+
 
     test_t tests[] = {
-
+        { VAR, "var" },
+        { IF, "if" },
+        { ELSE, "else" },
+        { LOOP, "loop" },
+        { FUNC, "func" },
+        { RETURN, "return" },
+        { BREAK, "break" },
+        { CONTINUE, "continue" },
+        { TRUE, "true" },
+        { FALSE, "false" },
     };
+
+    ITR_TESTS(9)
 
     return 0;
 }
 
 int main(int argc, char **argv)
 {
-	test_operators();
+    test_ident_and_types();
+    //test_operators();
+    //test_keywords();
 
-	return 0;
+
+    return 0;
 }

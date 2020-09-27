@@ -18,6 +18,7 @@ typedef struct lexer {
 /* Lexer utility functions */
 int is_letter(char c);
 int is_digit(char c);
+int str_cont(char c, char *str);
 
 
 lexer_t *lexer_init(char *input);
