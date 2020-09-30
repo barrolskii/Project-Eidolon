@@ -135,6 +135,8 @@ struct token *next_token(lexer_t *l)
         tok->type = CHAR;
         tok->literal = lexer_read_letter(l);
 
+        lexer_read_char(l);
+
         break;
     case '"':
         lexer_read_char(l); /* Skip to the next character of the string */
