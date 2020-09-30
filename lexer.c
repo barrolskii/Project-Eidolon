@@ -7,7 +7,7 @@ int str_cont(char c, char *str)
 {
     char *curr_str = str;
 
-    while(*((curr_str)++) != '\0' )
+    while(*curr_str++ != '\0' )
     {
         if (*curr_str == c) return 1;
     }
@@ -88,6 +88,32 @@ char *lexer_read_identifier(lexer_t *l)
     return str;
 }
 
+char *lexer_read_letter(lexer_t *l)
+{
+    char *str = calloc(2, sizeof(char)); // 2 for the character and the null termination character
+    str[0] = l->ch;
+
+    return str;
+}
+
+char *lexer_read_string(lexer_t *l)
+{
+    int pos = l->pos;
+
+    while (l->ch != '"')
+    {
+        lexer_read_char(l);
+    }
+
+    int size = (l->pos - pos) + 1;
+
+    char *str = calloc(size, sizeof(char));
+    memcpy(str, &l->input[pos], (size - 1));
+    str[size - 1] = '\0';
+
+    return str;
+}
+
 void lexer_skip_whitespace(lexer_t *l)
 {
     while (l->ch == ' ' || l->ch == '\t' || l->ch == '\n' || l->ch == '\r')
@@ -102,6 +128,22 @@ struct token *next_token(lexer_t *l)
 
     switch (l->ch)
     {
+    case '\'':
+        lexer_read_char(l);
+
+        tok = malloc(sizeof(struct token));
+        tok->type = CHAR;
+        tok->literal = lexer_read_letter(l);
+
+        break;
+    case '"':
+        lexer_read_char(l); /* Skip to the next character of the string */
+
+        tok = malloc(sizeof(struct token));
+        tok->literal = lexer_read_string(l);
+        tok->type = STRING;
+
+        break;
     case '=':
         if (lexer_peek_char(l) == '=')
         {
@@ -246,7 +288,6 @@ struct token *next_token(lexer_t *l)
         else if (is_digit(l->ch))
         {
             tok = malloc(sizeof(struct token));
-            tok->type = INT;
             tok->literal = lexer_read_digit(l);
 
             if ( str_cont('.', tok->literal))

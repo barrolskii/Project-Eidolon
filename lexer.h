@@ -22,10 +22,15 @@ int str_cont(char c, char *str);
 
 
 lexer_t *lexer_init(char *input);
+
 void lexer_read_char(lexer_t *l);
 char lexer_peek_char(lexer_t *l);
+
 char *lexer_read_digit(lexer_t *l);
 char *lexer_read_identifier(lexer_t *l);
+char *lexer_read_letter(lexer_t *l);
+char *lexer_read_string(lexer_t *l);
+
 void lexer_skip_whitespace(lexer_t *l);
 
 

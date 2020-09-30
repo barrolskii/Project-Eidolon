@@ -53,14 +53,14 @@ int test_ident_and_types()
             "value \
             1234 \
             123.456 \
-            \"mystring\" \
+            \"my^str$ing\" \
             'c'";
 
     test_t tests[] = {
         {IDENT, "value" },
         {INT, "1234" },
         {FLOAT, "123.456" },
-        {STRING, "mystring" },
+        {STRING, "my^str$ing" },
         {CHAR, "c" },
     };
 
