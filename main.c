@@ -13,7 +13,7 @@ int main(int argc, char **argv)
 
     while (1)
     {
-        //printf(">> ");
+        printf(">> ");
         scanf(" %1024[^\n]", input);
 
         l = lexer_init(input);
