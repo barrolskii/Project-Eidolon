@@ -4,7 +4,7 @@ phantom: token.c lexer.c main.c
 	$(CC) token.c lexer.c main.c -o phantom.exe
 
 test: test.c
-	$(CC) token.c lexer.c test.c -o tests.exe
+	$(CC) token.c lexer.c parser.c ast.c test.c -o tests.exe
 
 #phantom: main.o lexer.o
 #	$(#CC) main.o lexer.o -o phantom.exe
