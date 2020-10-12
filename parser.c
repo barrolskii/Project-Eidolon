@@ -80,12 +80,35 @@ statement_t *parser_parse_var_statement(parser_t *p)
     return stmt;
 }
 
+statement_t *parser_parse_return_statement(parser_t *p)
+{
+    statement_t *stmt = malloc(sizeof(statement_t));
+    stmt->type = p->cur_tok->type;
+
+    parser_next_token(p);
+
+    stmt->node_type = STATEMENT;
+    stmt->literal = malloc(sizeof(char) * (strlen(p->cur_tok->literal) + 1));
+    strcpy(stmt->literal, p->cur_tok->literal);
+
+
+    /* TODO: We're skipping the expression until we encounter a semicolon */
+    while (p->cur_tok->type != SEMI_COLON)
+    {
+        parser_next_token(p);
+    }
+
+    return stmt;
+}
+
 statement_t *parser_parse_statement(parser_t *p)
 {
     switch (p->cur_tok->type)
     {
         case VAR:
             return parser_parse_var_statement(p);
+        case RETURN:
+            return parser_parse_return_statement(p);
         default:
             return NULL;
     }

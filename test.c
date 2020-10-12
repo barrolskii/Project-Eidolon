@@ -82,8 +82,13 @@ int test_parser(char *input, parser_test_t *tests, unsigned count, int (*func)(s
     parser_t *p = parser_init(l);
 
     program_t *prog = parser_parse_program(p);
-    if (!check_parser_errors(p))
+    check_parser_errors(p);
+
+
+    if (!prog)
     {
+        fprintf(stderr, "parser_parse_program() returned NULL\n");
+
         /* TODO: free the linked lists for the prog and parser. Should really do this already... */
         free(prog);
         free(p);
@@ -92,18 +97,16 @@ int test_parser(char *input, parser_test_t *tests, unsigned count, int (*func)(s
         return -1;
     }
 
-    if (!prog)
-    {
-        fprintf(stderr, "parser_parse_program() returned NULL\n");
-        goto free_memory;
-        return -1;
-    }
-
     if (prog->count != count)
     {
         fprintf(stderr,
                 "prog->count does not contain %d statements. Got %d\n",
                 count, prog->count);
+
+        free(prog);
+        free(p);
+        free(l);
+
         return -1;
     }
 
@@ -120,9 +123,9 @@ int test_parser(char *input, parser_test_t *tests, unsigned count, int (*func)(s
         i++;
     }
 
-free_memory:
-    free(l);
+    free(prog);
     free(p);
+    free(l);
 
     return 0;
 }
@@ -138,7 +141,25 @@ int test_parser_var_statement(struct node *stmt, parser_test_t *test)
     if (strcmp(stmt->data->literal, test->exp_i))
     {
        printf("%d\n", strcmp(stmt->data->literal, test->exp_i));
-       fprintf(stderr, "Var statement literal not %s. Got %s\n", test->exp_i, stmt->data->literal);
+       fprintf(stderr, "var statement literal not %s. Got %s\n", test->exp_i, stmt->data->literal);
+       return -1;
+    }
+
+    return 0;
+}
+
+int test_parser_return_statement(struct node *stmt, parser_test_t *test)
+{
+    if (stmt->data->type != RETURN)
+    {
+        fprintf(stderr, "Token type not RETURN. Got %s\n", get_type_literal(stmt->data->type));
+        return -1;
+    }
+
+    if (strcmp(stmt->data->literal, test->exp_i))
+    {
+       printf("%d\n", strcmp(stmt->data->literal, test->exp_i));
+       fprintf(stderr, "return statement literal not %s. Got %s\n", test->exp_i, stmt->data->literal);
        return -1;
     }
 
@@ -226,18 +247,30 @@ int main(int argc, char **argv)
     //test_lexer_tokens(operator_input, operator_tests, 25);
     //test_lexer_tokens(keywords_input, keywords_tests, 10);
 
-    char *parser_input =
-        "var x 5; \
-         var = 10; \
-         var 123456;";
+    char *parser_var_input =
+        "var x = 5; \
+         var y = 10; \
+         var foobar = 123456;";
 
-    parser_test_t parser_expected[] = {
+    parser_test_t parser_var_expected[] = {
         { "x" },
         { "y" },
         { "foobar" }
     };
 
-    test_parser(parser_input, parser_expected, 3, test_parser_var_statement);
+    char *parser_return_input =
+        "return 5; \
+         return 10; \
+         return 123456;";
+
+    parser_test_t parser_return_expected[] = {
+        { "5" },
+        { "10" },
+        { "123456" }
+    };
+
+    test_parser(parser_var_input, parser_var_expected, 3, test_parser_var_statement);
+    test_parser(parser_return_input, parser_return_expected, 3, test_parser_return_statement);
 
     return 0;
 }
