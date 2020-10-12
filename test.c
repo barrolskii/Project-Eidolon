@@ -58,6 +58,22 @@ int test_lexer_tokens(char *input, lexer_test_t *tests, unsigned count)
     return 0;
 }
 
+int check_parser_errors(parser_t *p)
+{
+    if (p->err_count == 0) return 0;
+
+    fprintf(stderr, "parser has %d errors\n", p->err_count);
+
+    struct error *curr_error = p->errors;
+    while(curr_error)
+    {
+        fprintf(stderr, "parser error: %s\n", curr_error->error);
+        curr_error = curr_error->next;
+    }
+
+    return -1;
+}
+
 int test_parser(char *input, parser_test_t *tests, unsigned count, int (*func)(struct node *, parser_test_t *))
 {
     printf("input: %s\n", input);
@@ -66,6 +82,15 @@ int test_parser(char *input, parser_test_t *tests, unsigned count, int (*func)(s
     parser_t *p = parser_init(l);
 
     program_t *prog = parser_parse_program(p);
+    if (!check_parser_errors(p))
+    {
+        /* TODO: free the linked lists for the prog and parser. Should really do this already... */
+        free(prog);
+        free(p);
+        free(l);
+
+        return -1;
+    }
 
     if (!prog)
     {
@@ -202,9 +227,9 @@ int main(int argc, char **argv)
     //test_lexer_tokens(keywords_input, keywords_tests, 10);
 
     char *parser_input =
-        "var x = 5; \
-         var y = 10; \
-         var foobar = 123456;";
+        "var x 5; \
+         var = 10; \
+         var 123456;";
 
     parser_test_t parser_expected[] = {
         { "x" },
