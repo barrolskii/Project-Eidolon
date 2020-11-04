@@ -89,11 +89,9 @@ int main(int argc, char **argv)
 	token_t tok;
 	while ( (tok = lexer_next(l)).type != TOK_EOF)
 	{
-	    printf("type: %d    %s    lit:%.*s    line: %d    len: %d\n",
-	            tok.type, token_get_literal(tok.type), tok.len, tok.start, tok.line, tok.len);
+	    printf("type: %4d    %20s    line: %4d    len: %4d    lit:%.*s\n",
+	            tok.type, token_get_literal(tok.type), tok.line, tok.len, tok.len, tok.start);
 	}
-
-    //printf("lexer start: %s\n", l->start);
 
 
 	lexer_free(l);

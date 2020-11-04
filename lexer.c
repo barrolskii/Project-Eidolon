@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "lexer.h"
 
@@ -21,6 +22,7 @@ static int is_script_end(char c)
 static char advance(lexer_t *l)
 {
     l->curr++;
+    l->col++;
     return l->curr[-1];
 }
 
@@ -86,24 +88,66 @@ static token_t new_token(lexer_t *l, token_type type)
     return tok;
 }
 
+static token_type check_keyword(const char *start, unsigned len)
+{
+    switch (*start)
+    {
+        case 'b': if (memcmp(start, "break", len) == 0) return TOK_BREAK; break;
+        case 'c': if (memcmp(start, "continue", len) == 0) return TOK_CONTINUE; break;
+        case 'e': if (memcmp(start, "else", len) == 0) return TOK_ELSE; break;
+        case 'f':
+        {
+            if (memcmp(start, "false", len) == 0) return TOK_FALSE;
+            if (memcmp(start, "func", len) == 0) return TOK_FUNC;
+            break;
+        }
+        case 'i': if (memcmp(start, "if", len) == 0) return TOK_IF; break;
+        case 'l': if (memcmp(start, "loop", len) == 0) return TOK_LOOP; break;
+        case 'r': if (memcmp(start, "return", len) == 0) return TOK_RETURN; break;
+        case 't': if (memcmp(start, "true", len) == 0) return TOK_TRUE; break;
+        case 'v': if (memcmp(start, "var", len) == 0) return TOK_VAR; break;
+    }
+
+    return TOK_IDENT;
+}
+
 static token_t new_identifer(lexer_t *l)
 {
     while (is_char(peek_char(l)) || is_digit(peek_char(l))) advance(l);
 
-    return new_token(l, TOK_IDENT);
+    unsigned len = (l->curr - l->start);
+    token_type type = check_keyword(l->start, len);
+
+    return new_token(l, type);
 }
 
 static token_t new_number(lexer_t *l)
 {
     token_type type = TOK_INT;
 
-    while (is_digit(peek_char(l)))
+    while (is_digit(peek_char(l)) || peek_char(l) == '.')
     {
-        //if (peek_char(l) == '.') type = TOK_FLOAT;
+        if (peek_char(l) == '.') type = TOK_FLOAT;
         advance(l);
     }
 
     return new_token(l, type);
+}
+
+static token_t new_string(lexer_t *l)
+{
+    while (peek_char(l) != '"' && !is_script_end(peek_char(l)))
+    {
+        if (peek_char(l) == '\n') l->line++;
+        advance(l);
+    }
+
+    if (is_script_end(peek_char(l))) return new_token(l, TOK_ERROR);
+
+    /*  Advance for the closing quote of the string */
+    advance(l);
+
+    return new_token(l, TOK_STRING);
 }
 
 static token_t next_token(lexer_t *l)
@@ -116,8 +160,8 @@ static token_t next_token(lexer_t *l)
 
     char c = advance(l);
 
-    if (is_char(*l->curr)) return new_identifer(l);
-    if (is_digit(*l->curr)) return new_number(l);
+    if (is_char(c)) return new_identifer(l);
+    if (is_digit(c)) return new_number(l);
 
     switch(c)
     {
@@ -146,6 +190,8 @@ static token_t next_token(lexer_t *l)
         case '}': return new_token(l, TOK_RBRACE);
         case '[': return new_token(l, TOK_LBRACKET);
         case ']': return new_token(l, TOK_RBRACKET);
+
+        case '"': return new_string(l);
     }
 
     return new_token(l, TOK_ILLEGAL);
@@ -179,39 +225,51 @@ const char *token_get_literal(token_type type)
     switch (type)
     {
         case TOK_IDENT: return "IDENT";
+        case TOK_ASSIGN: return "ASSIGN";
         case TOK_INT: return "INT";
         case TOK_FLOAT: return "FLOAT";
-        case TOK_ASSIGN: return "=";
+        case TOK_STRING: return "STRING";
 
-        case TOK_PLUS: return "+";
-        case TOK_MINUS: return "-";
-        case TOK_DIVIDE: return "/";
-        case TOK_MULTIPLY: return "*";
-        case TOK_MODULO: return "%";
+        case TOK_PLUS: return "PLUS";
+        case TOK_MINUS: return "MINUS";
+        case TOK_DIVIDE: return "DIVIDE";
+        case TOK_MULTIPLY: return "MULTIPLY";
+        case TOK_MODULO: return "MODULO";
 
-        case TOK_BANG: return "!";
-        case TOK_AND: return "&&";
-        case TOK_OR: return "||";
-        case TOK_INCREMENT: return "++";
-        case TOK_DECREMENT: return "--";
+        case TOK_BANG: return "BANG";
+        case TOK_AND: return "AND";
+        case TOK_OR: return "OR";
+        case TOK_INCREMENT: return "INCREMENT";
+        case TOK_DECREMENT: return "DECREMENT";
 
-        case TOK_LT: return "<";
-        case TOK_GT: return ">";
-        case TOK_NE: return "!=";
-        case TOK_EQ: return "==";
-        case TOK_LT_EQ: return "<=";
-        case TOK_GT_EQ: return ">=";
+        case TOK_LT: return "LT";
+        case TOK_GT: return "GT";
+        case TOK_NE: return "NE";
+        case TOK_EQ: return "EQ";
+        case TOK_LT_EQ: return "LT_EQ";
+        case TOK_GT_EQ: return "GT_EQ";
 
-        case TOK_COMMA: return ",";
-        case TOK_SEMICOLON: return ";";
-        case TOK_COMMENT: return "#";
+        case TOK_COMMA: return "COMMA";
+        case TOK_SEMICOLON: return "SEMICOLON";
+        case TOK_COMMENT: return "COMMENT";
 
-        case TOK_LPAREN: return "(";
-        case TOK_RPAREN: return ")";
-        case TOK_LBRACE: return "{";
-        case TOK_RBRACE: return "}";
-        case TOK_LBRACKET: return "[";
-        case TOK_RBRACKET: return "]";
+        case TOK_LPAREN: return "LPAREN";
+        case TOK_RPAREN: return "RPAREN";
+        case TOK_LBRACE: return "LBRACE";
+        case TOK_RBRACE: return "RBRACE";
+        case TOK_LBRACKET: return "LBRACKET";
+        case TOK_RBRACKET: return "RBRACKET";
+
+        case TOK_VAR: return "VAR";
+        case TOK_IF: return "IF";
+        case TOK_ELSE: return "ELSE";
+        case TOK_LOOP: return "LOOP";
+        case TOK_FUNC: return "FUNC";
+        case TOK_RETURN: return "RETURN";
+        case TOK_BREAK: return "BREAK";
+        case TOK_CONTINUE: return "CONTINUE";
+        case TOK_TRUE: return "TRUE";
+        case TOK_FALSE: return "FALSE";
         default: return "ILLEGAL";
     }
 }
