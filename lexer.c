@@ -220,7 +220,7 @@ token_t lexer_next(lexer_t *l)
     return next_token(l);
 }
 
-const char *token_get_literal(token_type type)
+const char *token_get_type_literal(token_type type)
 {
     switch (type)
     {

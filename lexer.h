@@ -77,6 +77,6 @@ typedef struct {
 lexer_t *lexer_init();
 void lexer_free(lexer_t *l);
 token_t lexer_next(lexer_t *l);
-const char *token_get_literal(token_type type);
+const char *token_get_type_literal(token_type type);
 
 #endif // __PHANTOM_LEXER_H_
