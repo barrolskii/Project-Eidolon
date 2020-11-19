@@ -23,8 +23,13 @@ typedef struct {
 } parse_rule_t;
 
 /* Function declarations */
-void parser_advance(parser_t *p, lexer_t *l);
+static void parse_precedence(parser_t *p, op_prec prec);
+void parser_advance(parser_t *p);
+static parse_rule_t *get_rule(token_type type);
+static void binary_op(parser_t *p);
 static void number_int(parser_t *p);
+
+static void emit_byte() { printf("emit byte called\n"); }
 
 parse_rule_t parse_rules[] = {
     /*              prefix  infix  operator precedence */
@@ -33,13 +38,13 @@ parse_rule_t parse_rules[] = {
     [TOK_ERROR]   = { NULL, NULL, OP_PREC_NONE },
     [TOK_EOF]     = { NULL, NULL, OP_PREC_NONE },
 
-    [TOK_IDENT]  = { NULL, NULL, OP_PREC_NONE },
-    [TOK_ASSIGN] = { NULL, NULL, OP_PREC_ASSIGN },
+    [TOK_IDENT]  = { NULL,       NULL, OP_PREC_NONE },
+    [TOK_ASSIGN] = { NULL,       NULL, OP_PREC_ASSIGN },
     [TOK_INT]    = { number_int, NULL, OP_PREC_NONE },
-    [TOK_FLOAT]  = { NULL, NULL, OP_PREC_NONE },
-    [TOK_STRING] = { NULL, NULL, OP_PREC_NONE },
+    [TOK_FLOAT]  = { NULL,       NULL, OP_PREC_NONE },
+    [TOK_STRING] = { NULL,       NULL, OP_PREC_NONE },
 
-    [TOK_PLUS]     = { NULL, NULL, OP_PREC_TERM },
+    [TOK_PLUS]     = { NULL, binary_op, OP_PREC_TERM },
     [TOK_MINUS]    = { NULL, NULL, OP_PREC_TERM },
     [TOK_DIVIDE]   = { NULL, NULL, OP_PREC_FACTOR },
     [TOK_MULTIPLY] = { NULL, NULL, OP_PREC_FACTOR },
@@ -99,43 +104,57 @@ static void parser_err_at_curr(parser_t *p)
         fprintf(stderr, "illegal character %.*s\n", p->curr.len, p->curr.start);
 }
 
-static void consume_tok(parser_t *p, lexer_t *l, token_type type, const char *err_msg)
+static void consume_tok(parser_t *p, token_type type, const char *err_msg)
 {
     if (p->curr.type == type)
     {
-        parser_advance(p, l);
+        parser_advance(p);
         return;
     }
 
     parser_err(p, err_msg);
 }
 
-parser_t *parser_init()
+parser_t *parser_init(const char *src)
 {
     parser_t *p = malloc(sizeof(parser_t));
     p->had_err = false;
+    p->l = lexer_init(src);
 
     return p;
 }
 
 void parser_free(parser_t *p)
 {
+    lexer_free(p->l);
     free(p);
 }
 
-void parser_advance(parser_t *p, lexer_t *l)
+void parser_advance(parser_t *p)
 {
     p->prev = p->curr;
 
-    p->curr = lexer_next(l);
+    p->curr = lexer_next(p->l);
 
     if (p->curr.type == TOK_ERROR || p->curr.type == TOK_ILLEGAL)
         parser_err_at_curr(p);
 }
 
+static void binary_op(parser_t *p)
+{
+    /* Keep track of the current operator */
+    token_type operator_type = p->prev.type;
+
+    /* Push the right operand onto the stack before the operator */
+    parse_rule_t *rule = get_rule(operator_type);
+    parse_precedence(p, rule->prec);
+
+    printf("Binary operation\n");
+}
+
 static void number_int(parser_t *p)
 {
-    long value = strtol(p->curr.start, NULL, 10);
+    long value = strtol(p->prev.start, NULL, 10);
     // TODO: print value for now
     printf("value: %lu\n", value);
 }
@@ -145,77 +164,70 @@ static parse_rule_t *get_rule(token_type type)
     return &parse_rules[type];
 }
 
-static void parse_precedence(parser_t *p, lexer_t *l, op_prec prec)
+static void parse_precedence(parser_t *p, op_prec prec)
 {
-    parse_func prefix_rule = get_rule(p->curr.type)->prefix;
+    parser_advance(p);
+
+    parse_func prefix_rule = get_rule(p->prev.type)->prefix;
     if (!prefix_rule)
     {
         parser_err(p, "Expected expression");
         return;
     }
 
-    bool can_assign = prec <= OP_PREC_ASSIGN;
     prefix_rule(p);
 
-    parser_advance(p, l);
-}
-
-static void temp_expr()
-{
-
-}
-
-static uint8_t temp_parse_var(parser_t *p, lexer_t *l)
-{
-    parser_advance(p, l);
-    consume_tok(p, l, TOK_IDENT, "Expected variable name after var");
-
-    return 0;
-}
-
-static void temp_var_declaration(parser_t *p, lexer_t *l)
-{
-    // parse the variable and then assign it to a variable
-    // match the equals token
-    // consume the semicolon
-    // define the variable
-
-    uint8_t global = temp_parse_var(p, l);
-
-    //if (match_tok(p->curr, TOK_ASSIGN))
-
-    // Error for now but default the value to NULL or nil
-    // whatever one you find is better
-    consume_tok(p, l, TOK_ASSIGN, "Expected '=' after variable name");
-    parse_precedence(p, l, OP_PREC_ASSIGN);
-
-    consume_tok(p, l, TOK_SEMICOLON, "Expected ';' after variable declaration");
-
-    // TODO: Define variable.
-}
-
-static void temp_declaration(parser_t *p, lexer_t *l)
-{
-    switch (p->curr.type)
+    while (prec <= get_rule(p->curr.type)->prec)
     {
-        case TOK_FUNC:
-            // func declaration
-        case TOK_VAR:
-            temp_var_declaration(p, l);
-        default:
-            // statement
-            return;
+        parser_advance(p);
+        parse_func infix_rule = get_rule(p->prev.type)->infix;
+        infix_rule(p);
     }
 }
 
-void parser_parse(parser_t *p, lexer_t *l)
+static void expression(parser_t *p)
 {
-    parser_advance(p, l);
+    parse_precedence(p, OP_PREC_ASSIGN);
+    consume_tok(p, TOK_SEMICOLON, "Expected ';' at the end of expression");
+    emit_byte();
+}
+
+static void statement(parser_t *p)
+{
+    switch(p->curr.type)
+    {
+        case TOK_IF:
+        case TOK_RETURN:
+        case TOK_LOOP:
+        case TOK_LBRACE:
+        {
+            printf("Statements not yet implemented\n");
+            return;
+        }
+        default:
+            expression(p);
+    }
+}
+
+void parser_parse(parser_t *p)
+{
+    parser_advance(p);
 
     while (!match_tok(p->curr, TOK_EOF))
     {
-        temp_declaration(p, l);
+        /* Check the declaration type */
+        switch (p->curr.type)
+        {
+            case TOK_FUNC:
+            case TOK_VAR:
+            {
+                printf("Var and func declarations not yet implemented\n");
+                return;
+            }
+            default:
+                statement(p);
+        }
 
-        parser_advance(p, l);
+        parser_advance(p);
     }
 }

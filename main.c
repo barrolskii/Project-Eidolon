@@ -58,7 +58,7 @@ static void print_usage()
 static void run_inline(const char *input)
 {
     lexer_t *l = lexer_init(input);
-    parser_t *p = parser_init();
+    parser_t *p = parser_init(input);
 
 #ifdef LEXER_DEBUG_OUTPUT
     debug_print_token_header();
@@ -71,7 +71,7 @@ static void run_inline(const char *input)
 #endif
 
 #ifdef PARSER_DEBUG_OUTPUT
-    parser_parse(p, l);
+    parser_parse(p);
 #endif
 
     parser_free(p);

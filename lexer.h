@@ -74,7 +74,7 @@ typedef struct {
     unsigned col;
 } lexer_t;
 
-lexer_t *lexer_init();
+lexer_t *lexer_init(const char *src);
 void lexer_free(lexer_t *l);
 token_t lexer_next(lexer_t *l);
 const char *token_get_type_literal(token_type type);
