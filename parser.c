@@ -29,8 +29,6 @@ static parse_rule_t *get_rule(token_type type);
 static void binary_op(parser_t *p);
 static void number_int(parser_t *p);
 
-static void emit_byte() { printf("emit byte called\n"); }
-
 parse_rule_t parse_rules[] = {
     /*              prefix  infix  operator precedence */
 
@@ -115,11 +113,12 @@ static void consume_tok(parser_t *p, token_type type, const char *err_msg)
     parser_err(p, err_msg);
 }
 
-parser_t *parser_init(const char *src)
+parser_t *parser_init(const char *src, vm_t *vm)
 {
     parser_t *p = malloc(sizeof(parser_t));
     p->had_err = false;
     p->l = lexer_init(src);
+    p->vm = vm;
 
     return p;
 }
@@ -140,6 +139,13 @@ void parser_advance(parser_t *p)
         parser_err_at_curr(p);
 }
 
+static void emit_byte(parser_t *p, uint8_t op)
+{
+    uint8_t ip = p->vm->ip;
+    p->vm->instructions[ip] = op;
+    p->vm->ip++;
+}
+
 static void binary_op(parser_t *p)
 {
     /* Keep track of the current operator */
@@ -147,16 +153,33 @@ static void binary_op(parser_t *p)
 
     /* Push the right operand onto the stack before the operator */
     parse_rule_t *rule = get_rule(operator_type);
-    parse_precedence(p, rule->prec);
+    parse_precedence(p, rule->prec + 1);
 
     printf("Binary operation\n");
+
+    /* TODO: Add other binary operators here */
+    switch (operator_type)
+    {
+        case TOK_PLUS: emit_byte(p, OP_ADD); break;
+        default:
+           printf("Other binary operators not yet implemented\n");
+    }
 }
 
 static void number_int(parser_t *p)
 {
+    /* TODO: Update this to use the garbage collector */
+
     long value = strtol(p->prev.start, NULL, 10);
-    // TODO: print value for now
-    printf("value: %lu\n", value);
+    object_t obj = { .type = OBJ_VAL_LONG, .as.long_num = value };
+
+    uint8_t sp = p->vm->sp;
+
+    /* Add the value to the object stack and increment the stack pointer */
+    p->vm->stack[sp] = obj;
+    p->vm->sp++;
+
+    emit_byte(p, OP_CONST);
 }
 
 static parse_rule_t *get_rule(token_type type)
@@ -189,7 +212,9 @@ static void expression(parser_t *p)
 {
     parse_precedence(p, OP_PREC_ASSIGN);
     consume_tok(p, TOK_SEMICOLON, "Expected ';' at the end of expression");
-    emit_byte();
+
+    /* TODO: Check if this is needed or not */
+    //emit_byte(p, OP_POP);
 }
 
 static void statement(parser_t *p)

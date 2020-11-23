@@ -4,6 +4,7 @@
 
 #include "lexer.h"
 #include "parser.h"
+#include "vm.h"
 #include "debug.h"
 
 static char *read_file(const char *path)
@@ -57,8 +58,9 @@ static void print_usage()
 
 static void run_inline(const char *input)
 {
+    vm_t *vm = vm_init();
     lexer_t *l = lexer_init(input);
-    parser_t *p = parser_init(input);
+    parser_t *p = parser_init(input, vm);
 
 #ifdef LEXER_DEBUG_OUTPUT
     debug_print_token_header();
@@ -74,6 +76,9 @@ static void run_inline(const char *input)
     parser_parse(p);
 #endif
 
+    vm_run(vm);
+
+    vm_free(vm);
     parser_free(p);
     lexer_free(l);
 }

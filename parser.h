@@ -7,15 +7,17 @@
 #include <stdint.h>
 
 #include "lexer.h"
+#include "vm.h"
 
 typedef struct {
     token_t prev;
     token_t curr;
     bool had_err;
     lexer_t *l;
+    vm_t *vm;
 } parser_t;
 
-parser_t *parser_init(const char *src);
+parser_t *parser_init(const char *src, vm_t *vm);
 void parser_free(parser_t *p);
 
 void parser_advance(parser_t *p);
