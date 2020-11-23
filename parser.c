@@ -43,10 +43,10 @@ parse_rule_t parse_rules[] = {
     [TOK_STRING] = { NULL,       NULL, OP_PREC_NONE },
 
     [TOK_PLUS]     = { NULL, binary_op, OP_PREC_TERM },
-    [TOK_MINUS]    = { NULL, NULL, OP_PREC_TERM },
-    [TOK_DIVIDE]   = { NULL, NULL, OP_PREC_FACTOR },
-    [TOK_MULTIPLY] = { NULL, NULL, OP_PREC_FACTOR },
-    [TOK_MODULO]   = { NULL, NULL, OP_PREC_FACTOR },
+    [TOK_MINUS]    = { NULL, binary_op, OP_PREC_TERM },
+    [TOK_DIVIDE]   = { NULL, binary_op, OP_PREC_FACTOR },
+    [TOK_MULTIPLY] = { NULL, binary_op, OP_PREC_FACTOR },
+    [TOK_MODULO]   = { NULL, binary_op, OP_PREC_FACTOR },
 
     [TOK_BANG]      = { NULL, NULL, OP_PREC_UNARY },
     [TOK_AND]       = { NULL, NULL, OP_PREC_AND },
@@ -141,9 +141,11 @@ void parser_advance(parser_t *p)
 
 static void emit_byte(parser_t *p, uint8_t op)
 {
-    uint8_t ip = p->vm->ip;
-    p->vm->instructions[ip] = op;
-    p->vm->ip++;
+    /* Get the index of the byte instruction */
+    uint8_t index = p->vm->instruct_count;
+
+    p->vm->instructions[index] = op;
+    p->vm->instruct_count++;
 }
 
 static void binary_op(parser_t *p)
@@ -155,14 +157,15 @@ static void binary_op(parser_t *p)
     parse_rule_t *rule = get_rule(operator_type);
     parse_precedence(p, rule->prec + 1);
 
-    printf("Binary operation\n");
-
-    /* TODO: Add other binary operators here */
     switch (operator_type)
     {
         case TOK_PLUS: emit_byte(p, OP_ADD); break;
-        default:
-           printf("Other binary operators not yet implemented\n");
+        case TOK_MINUS: emit_byte(p, OP_SUB); break;
+        case TOK_MULTIPLY: emit_byte(p, OP_MUL); break;
+        case TOK_DIVIDE: emit_byte(p, OP_DIV); break;
+        case TOK_MODULO: emit_byte(p, OP_MOD); break;
+        default: break;
+            /* Unreachable */
     }
 }
 
@@ -173,11 +176,11 @@ static void number_int(parser_t *p)
     long value = strtol(p->prev.start, NULL, 10);
     object_t obj = { .type = OBJ_VAL_LONG, .as.long_num = value };
 
-    uint8_t sp = p->vm->sp;
+    uint8_t const_count = p->vm->const_count;
 
-    /* Add the value to the object stack and increment the stack pointer */
-    p->vm->stack[sp] = obj;
-    p->vm->sp++;
+    /* Add the value to the constant list */
+    p->vm->constants[const_count] = obj;
+    p->vm->const_count++;
 
     emit_byte(p, OP_CONST);
 }
@@ -212,9 +215,7 @@ static void expression(parser_t *p)
 {
     parse_precedence(p, OP_PREC_ASSIGN);
     consume_tok(p, TOK_SEMICOLON, "Expected ';' at the end of expression");
-
-    /* TODO: Check if this is needed or not */
-    //emit_byte(p, OP_POP);
+    emit_byte(p, OP_POP);
 }
 
 static void statement(parser_t *p)

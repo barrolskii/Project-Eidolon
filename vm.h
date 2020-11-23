@@ -13,6 +13,10 @@
 typedef enum {
     OP_CONST,
     OP_ADD,
+    OP_SUB,
+    OP_MUL,
+    OP_DIV,
+    OP_MOD,
     OP_POP,
 } op_code;
 
@@ -34,10 +38,17 @@ typedef struct {
     //object_t *stack;
     object_t stack[STACK_MAX];
     uint32_t sp;            /* Stack pointer */
-    object_t *constants;     /* TODO: See if we really need this */
+
+    object_t constants[STACK_MAX];
+    uint32_t ci;            /* Constant index */
+    uint32_t const_count;   /* Total constants */
+
+    //object_t *constants;
     //uint8_t *instructions;
+    //
     uint8_t instructions[UINT8_MAX];
     uint32_t ip;             /* Instruction pointer */
+    uint32_t instruct_count;
 } vm_t;
 
 

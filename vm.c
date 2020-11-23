@@ -22,9 +22,7 @@ static void push(vm_t *vm, object_t obj)
 
 static void exec_binary_op(vm_t *vm)
 {
-    printf("Exec binary op\n");
-
-    op_code code = vm->instructions[vm->ip - 1];
+    op_code code = vm->instructions[vm->ip];
 
     switch (code)
     {
@@ -34,7 +32,38 @@ static void exec_binary_op(vm_t *vm)
             object_t a = pop(vm);
             a.as.long_num += b.as.long_num;
             push(vm, a);
-            vm->ip--;
+            break;
+        }
+        case OP_SUB:
+        {
+            object_t b = pop(vm);
+            object_t a = pop(vm);
+            a.as.long_num -= b.as.long_num;
+            push(vm, a);
+            break;
+        }
+        case OP_MUL:
+        {
+            object_t b = pop(vm);
+            object_t a = pop(vm);
+            a.as.long_num *= b.as.long_num;
+            push(vm, a);
+            break;
+        }
+        case OP_DIV:
+        {
+            object_t b = pop(vm);
+            object_t a = pop(vm);
+            a.as.long_num /= b.as.long_num;
+            push(vm, a);
+            break;
+        }
+        case OP_MOD:
+        {
+            object_t b = pop(vm);
+            object_t a = pop(vm);
+            a.as.long_num %= b.as.long_num;
+            push(vm, a);
             break;
         }
         default:
@@ -47,9 +76,14 @@ vm_t *vm_init()
     vm_t *vm = malloc(sizeof(vm_t));
     //vm->stack = calloc(STACK_MAX, sizeof(object_t));
     vm->sp = 0;
-    vm->constants = NULL;
+    //vm->constants = NULL;
     //vm->instructions = calloc(UINT8_MAX, sizeof(uint8_t));
     vm->ip = 0;
+
+    vm->const_count = 0;
+    vm->ci = 0;
+
+    vm->instruct_count = 0;
 
     return vm;
 }
@@ -63,22 +97,36 @@ void vm_free(vm_t *vm)
 
 void vm_run(vm_t *vm)
 {
-    while (vm->ip > 0)
+    while (vm->ip < vm->instruct_count)
     {
-        switch (vm->instructions[vm->ip - 1])
+        op_code code = vm->instructions[vm->ip];
+
+        //switch (vm->instructions[vm->ip])
+        switch (code)
         {
             case OP_CONST:
             {
-                object_t obj = pop(vm);
-                printf("%ld \n", obj.as.long_num);
+                object_t obj = vm->constants[vm->ci];
+                push(vm, obj);
+                vm->ci++;
                 break;
             }
             case OP_ADD:
+            case OP_SUB:
+            case OP_MUL:
+            case OP_DIV:
+            case OP_MOD:
                 exec_binary_op(vm); break;
+            case OP_POP:
+            {
+                object_t obj = pop(vm);
+                printf("%ld\n", obj.as.long_num);
+                break;
+            }
             default:
                 printf("Default reached\n");
         }
 
-        vm->ip--;
+        vm->ip++;
     }
 }
