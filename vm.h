@@ -7,6 +7,7 @@
 
 #include "lexer.h"
 #include "object.h"
+//#include "hashtable.h"
 
 #define STACK_MAX 2048
 
@@ -18,6 +19,7 @@ typedef enum {
     OP_DIV,
     OP_MOD,
     OP_POP,
+    OP_ADD_GLOBAL,
 } op_code;
 
 typedef struct {
@@ -35,6 +37,8 @@ typedef struct {
     uint8_t instructions[UINT8_MAX];
     uint32_t ip;             /* Instruction pointer */
     uint32_t instruct_count;
+
+    //struct hash_table *globals; /* Table of all global variables */
 } vm_t;
 
 

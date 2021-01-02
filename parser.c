@@ -218,6 +218,38 @@ static void expression(parser_t *p)
     emit_byte(p, OP_POP);
 }
 
+
+static void var_declaration(parser_t *p)
+{
+    /* Skip the var token to the next identifier token */
+    parser_advance(p);
+
+    printf("Inside var declaration\n");
+
+    consume_tok(p, TOK_IDENT, "Expected variable identifier");
+
+    char *ident = malloc(sizeof(char) * p->curr.len);            // TODO: memory leak! get garbage collector asap
+    memccpy(ident, p->prev.start, *p->prev.start, p->prev.len); // TODO: change this from c11 func to c99
+
+    // Create an object for the name and put it on the stack
+    object_t obj = { .type = OBJ_VAL_STR, .as.str = ident };
+    printf("obj str: %s\n", obj.as.str);
+
+    // Add the string to the constants list
+    uint8_t const_count = p->vm->const_count;
+    p->vm->constants[const_count] = obj;
+    p->vm->const_count++;
+
+    // Emit the instruction
+    emit_byte(p, OP_CONST);
+
+    expression(p);
+
+    consume_tok(p, TOK_SEMICOLON, "Expected ';' at the end of expression");
+
+    emit_byte(p, OP_ADD_GLOBAL);
+}
+
 static void statement(parser_t *p)
 {
     switch(p->curr.type)
@@ -247,7 +279,8 @@ void parser_parse(parser_t *p)
             case TOK_FUNC:
             case TOK_VAR:
             {
-                printf("Var and func declarations not yet implemented\n");
+                printf("Starting var declaration\n");
+                var_declaration(p);
                 return;
             }
             default:
