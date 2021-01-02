@@ -20,20 +20,6 @@ typedef enum {
     OP_POP,
 } op_code;
 
-typedef enum {
-    OBJ_VAL_LONG,
-} object_value_t;
-
-typedef struct {
-    object_value_t type;
-    union {
-        long long_num;
-        double double_num;
-        char *str;
-    } as;
-
-} object_t;
-
 typedef struct {
     //object_t *stack;
     object_t stack[STACK_MAX];
