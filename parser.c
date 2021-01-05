@@ -214,10 +214,14 @@ static void parse_precedence(parser_t *p, op_prec prec)
 static void expression(parser_t *p)
 {
     parse_precedence(p, OP_PREC_ASSIGN);
+}
+
+static void expression_statement(parser_t *p)
+{
+    expression(p);
     consume_tok(p, TOK_SEMICOLON, "Expected ';' at the end of expression");
     emit_byte(p, OP_POP);
 }
-
 
 static void var_declaration(parser_t *p)
 {
@@ -243,9 +247,9 @@ static void var_declaration(parser_t *p)
     // Emit the instruction
     emit_byte(p, OP_CONST);
 
-    expression(p);
+    parser_advance(p);
 
-    consume_tok(p, TOK_SEMICOLON, "Expected ';' at the end of expression");
+    expression(p);
 
     emit_byte(p, OP_ADD_GLOBAL);
 }
@@ -263,7 +267,7 @@ static void statement(parser_t *p)
             return;
         }
         default:
-            expression(p);
+            expression_statement(p);
     }
 }
 

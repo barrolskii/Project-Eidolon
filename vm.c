@@ -123,6 +123,11 @@ void vm_run(vm_t *vm)
                 printf("%ld\n", obj.as.long_num);
                 break;
             }
+            case OP_ADD_GLOBAL:
+            {
+                printf("OP_ADD_GLOBAL\n");
+                break;
+            }
             default:
                 printf("Default reached\n");
         }

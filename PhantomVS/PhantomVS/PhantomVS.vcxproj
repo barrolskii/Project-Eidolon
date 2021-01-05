@@ -88,6 +88,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -102,6 +103,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -140,6 +142,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\debug.c" />
+    <ClCompile Include="..\..\hashtable.c" />
     <ClCompile Include="..\..\lexer.c" />
     <ClCompile Include="..\..\main.c" />
     <ClCompile Include="..\..\parser.c" />
@@ -147,6 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\debug.h" />
+    <ClInclude Include="..\..\hashtable.h" />
     <ClInclude Include="..\..\lexer.h" />
     <ClInclude Include="..\..\parser.h" />
     <ClInclude Include="..\..\vm.h" />
