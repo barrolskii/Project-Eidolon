@@ -233,7 +233,8 @@ static void var_declaration(parser_t *p)
     consume_tok(p, TOK_IDENT, "Expected variable identifier");
 
     char *ident = malloc(sizeof(char) * p->curr.len);            // TODO: memory leak! get garbage collector asap
-    memccpy(ident, p->prev.start, *p->prev.start, p->prev.len); // TODO: change this from c11 func to c99
+    memccpy(ident, p->prev.start, *p->prev.start, p->prev.len + 1); // TODO: change this from c11 func to c99
+    ident[p->prev.len] = '\0';
 
     // Create an object for the name and put it on the stack
     object_t obj = { .type = OBJ_VAL_STR, .as.str = ident };
@@ -267,7 +268,7 @@ static void statement(parser_t *p)
             return;
         }
         default:
-            expression_statement(p);
+            expression_statement(p); // TODO: Think of a better name for this? expression statement sounds weird
     }
 }
 

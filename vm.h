@@ -7,7 +7,7 @@
 
 #include "lexer.h"
 #include "object.h"
-//#include "hashtable.h"
+#include "hashtable.h"
 
 #define STACK_MAX 2048
 
@@ -38,7 +38,7 @@ typedef struct {
     uint32_t ip;             /* Instruction pointer */
     uint32_t instruct_count;
 
-    //struct hash_table *globals; /* Table of all global variables */
+    struct hash_table *globals; /* Table of all global variables */
 } vm_t;
 
 

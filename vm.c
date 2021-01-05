@@ -85,6 +85,8 @@ vm_t *vm_init()
 
     vm->instruct_count = 0;
 
+    vm->globals = ht_init();
+
     return vm;
 }
 
@@ -92,6 +94,8 @@ void vm_free(vm_t *vm)
 {
     //free(vm->stack);
     //free(vm->instructions);
+
+    ht_free(vm->globals);
     free(vm);
 }
 
@@ -101,7 +105,6 @@ void vm_run(vm_t *vm)
     {
         op_code code = vm->instructions[vm->ip];
 
-        //switch (vm->instructions[vm->ip])
         switch (code)
         {
             case OP_CONST:
@@ -125,7 +128,15 @@ void vm_run(vm_t *vm)
             }
             case OP_ADD_GLOBAL:
             {
-                printf("OP_ADD_GLOBAL\n");
+                object_t obj_b = pop(vm);
+                object_t *obj_val = malloc(sizeof(object_t));
+                memcpy(obj_val, &obj_b, sizeof(object_t));
+
+                object_t obj_a = pop(vm);
+                ht_insert(vm->globals, obj_a.as.str, obj_val);
+                int val = ht_contains_key(vm->globals, "a");
+                printf("val: %d\n", val);
+
                 break;
             }
             default:
