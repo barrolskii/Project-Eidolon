@@ -28,6 +28,7 @@ void parser_advance(parser_t *p);
 static parse_rule_t *get_rule(token_type type);
 static void binary_op(parser_t *p);
 static void number_int(parser_t *p);
+static void variable(parser_t *p);
 
 parse_rule_t parse_rules[] = {
     /*              prefix  infix  operator precedence */
@@ -36,7 +37,7 @@ parse_rule_t parse_rules[] = {
     [TOK_ERROR]   = { NULL, NULL, OP_PREC_NONE },
     [TOK_EOF]     = { NULL, NULL, OP_PREC_NONE },
 
-    [TOK_IDENT]  = { NULL,       NULL, OP_PREC_NONE },
+    [TOK_IDENT]  = { variable,       NULL, OP_PREC_NONE },
     [TOK_ASSIGN] = { NULL,       NULL, OP_PREC_ASSIGN },
     [TOK_INT]    = { number_int, NULL, OP_PREC_NONE },
     [TOK_FLOAT]  = { NULL,       NULL, OP_PREC_NONE },
@@ -185,6 +186,26 @@ static void number_int(parser_t *p)
     emit_byte(p, OP_CONST);
 }
 
+static void variable(parser_t *p)
+{
+    printf("Entered variable handler function\n");
+
+    char *ident = malloc(sizeof(char) * p->curr.len);    // TODO: Memory leak again. Sort this out
+    memccpy(ident, p->prev.start, *p->prev.start, p->prev.len + 1);
+    ident[p->prev.len] = '\0';
+
+    object_t obj = { .type = OBJ_VAL_STR, .as.str = ident };
+
+    // Add the string to the constants list
+    uint8_t const_count = p->vm->const_count;
+    p->vm->constants[const_count] = obj;
+    p->vm->const_count++;
+
+    // Emit the instructions
+    emit_byte(p, OP_CONST);
+    emit_byte(p, OP_GET_GLOBAL);
+}
+
 static parse_rule_t *get_rule(token_type type)
 {
     return &parse_rules[type];
@@ -286,7 +307,7 @@ void parser_parse(parser_t *p)
             {
                 printf("Starting var declaration\n");
                 var_declaration(p);
-                return;
+                break;
             }
             default:
                 statement(p);

@@ -25,5 +25,6 @@ void ht_free(struct hash_table *ht);
 
 int ht_contains_key(struct hash_table *ht, char *key);
 int ht_insert(struct hash_table *ht, char *key, object_t *value);
+int ht_get_value(struct hash_table *ht, char *key, object_t *value);
 
 #endif // __PHANTOM_HASHTABLE_H_

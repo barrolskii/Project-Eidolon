@@ -20,7 +20,13 @@ typedef enum {
     OP_MOD,
     OP_POP,
     OP_ADD_GLOBAL,
+    OP_GET_GLOBAL,
 } op_code;
+
+struct object_node {
+    object_t *obj;
+    struct object_node *next;
+};
 
 typedef struct {
     //object_t *stack;

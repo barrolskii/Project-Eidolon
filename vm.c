@@ -139,6 +139,25 @@ void vm_run(vm_t *vm)
 
                 break;
             }
+            case OP_GET_GLOBAL:
+            {
+                printf("Get global inst\n");
+
+                object_t obj = pop(vm);
+
+                int val = ht_contains_key(vm->globals, obj.as.str);
+                if (!val)
+                {
+                    /* Runtime error */
+                    printf("Error: Undefined variable \n");
+                }
+
+                object_t obj_two;
+                ht_get_value(vm->globals, obj.as.str, &obj_two);
+                push(vm, obj_two);
+
+                break;
+            }
             default:
                 printf("Default reached\n");
         }

@@ -52,6 +52,8 @@ int ht_contains_key(struct hash_table *ht, char *key)
 {
     unsigned index = hash(key, strlen(key));
 
+    /* Quick and dirty fix. If there is not entry at the table then return 0 */
+    if (!ht->items[index]) return 0;
     if (strcmp(ht->items[index]->key, key) == 0) return 1;
 
     struct ht_item *curr = ht->items[index]->next;
@@ -94,6 +96,15 @@ int ht_insert(struct hash_table *ht, char *key, object_t *value)
     }
 
     curr->next = new_item(ht, key, value);
+
+    return 0;
+}
+
+int ht_get_value(struct hash_table *ht, char *key, object_t *value)
+{
+    unsigned index = hash(key, strlen(key));
+
+    *value = *ht->items[index]->value;
 
     return 0;
 }
