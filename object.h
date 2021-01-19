@@ -3,7 +3,8 @@
 
 typedef enum {
     OBJ_VAL_LONG,
-    OBJ_VAL_STR,
+    OBJ_VAL_DOUBLE,
+    OBJ_VAL_STR
 } object_value_t;
 
 typedef struct {

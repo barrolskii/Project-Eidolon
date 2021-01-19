@@ -123,7 +123,10 @@ void vm_run(vm_t *vm)
             case OP_POP:
             {
                 object_t obj = pop(vm);
-                printf("%ld\n", obj.as.long_num);
+                if (obj.type == OBJ_VAL_LONG) printf("%ld\n", obj.as.long_num);
+                if (obj.type == OBJ_VAL_DOUBLE) printf("%f\n", obj.as.double_num);
+                if (obj.type == OBJ_VAL_STR)  printf("%s\n", obj.as.str);
+
                 break;
             }
             case OP_ADD_GLOBAL:

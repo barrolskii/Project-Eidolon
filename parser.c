@@ -28,6 +28,8 @@ void parser_advance(parser_t *p);
 static parse_rule_t *get_rule(token_type type);
 static void binary_op(parser_t *p);
 static void number_int(parser_t *p);
+static void number_double(parser_t *p);
+static void string(parser_t *p);
 static void variable(parser_t *p);
 
 parse_rule_t parse_rules[] = {
@@ -40,8 +42,8 @@ parse_rule_t parse_rules[] = {
     [TOK_IDENT]  = { variable,       NULL, OP_PREC_NONE },
     [TOK_ASSIGN] = { NULL,       NULL, OP_PREC_ASSIGN },
     [TOK_INT]    = { number_int, NULL, OP_PREC_NONE },
-    [TOK_FLOAT]  = { NULL,       NULL, OP_PREC_NONE },
-    [TOK_STRING] = { NULL,       NULL, OP_PREC_NONE },
+    [TOK_FLOAT]  = { number_double, NULL, OP_PREC_NONE },
+    [TOK_STRING] = { string,       NULL, OP_PREC_NONE },
 
     [TOK_PLUS]     = { NULL, binary_op, OP_PREC_TERM },
     [TOK_MINUS]    = { NULL, binary_op, OP_PREC_TERM },
@@ -176,6 +178,38 @@ static void number_int(parser_t *p)
 
     long value = strtol(p->prev.start, NULL, 10);
     object_t obj = { .type = OBJ_VAL_LONG, .as.long_num = value };
+
+    uint8_t const_count = p->vm->const_count;
+
+    /* Add the value to the constant list */
+    p->vm->constants[const_count] = obj;
+    p->vm->const_count++;
+
+    emit_byte(p, OP_CONST);
+}
+
+static void number_double(parser_t *p)
+{
+    /* TODO: Update this to use the garbage collector */
+
+    double value = strtod(p->prev.start, NULL);
+    object_t obj = { .type = OBJ_VAL_DOUBLE, .as.double_num = value };
+
+    uint8_t const_count = p->vm->const_count;
+
+    /* Add the value to the constant list */
+    p->vm->constants[const_count] = obj;
+    p->vm->const_count++;
+
+    emit_byte(p, OP_CONST);
+}
+
+static void string(parser_t *p)
+{
+    char *value = NULL;
+
+    object_t obj = { .type = OBJ_VAL_STR, .as.str = calloc(sizeof(char), p->prev.len) };
+    memccpy(obj.as.str, p->prev.start + 1, 0, p->prev.len - 2);
 
     uint8_t const_count = p->vm->const_count;
 
