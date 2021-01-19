@@ -56,12 +56,8 @@ static void print_usage()
     printf("For help type:\n  phantom -h\n\n");
 }
 
-static void run_inline(const char *input)
+static void run_inline(lexer_t *l, parser_t *p, vm_t *vm)
 {
-    vm_t *vm = vm_init();
-    lexer_t *l = lexer_init(input);
-    parser_t *p = parser_init(input, vm);
-
 #ifdef LEXER_DEBUG_OUTPUT
     debug_print_token_header();
 
@@ -77,15 +73,15 @@ static void run_inline(const char *input)
 #endif
 
     vm_run(vm);
-
-    vm_free(vm);
-    parser_free(p);
-    lexer_free(l);
 }
 
 static void repl()
 {
     char input[1024];
+
+    vm_t *vm = vm_init();
+    lexer_t *l = NULL;//lexer_init(input);
+    parser_t *p = NULL;//parser_init(input, vm);
 
     for (;;)
     {
@@ -97,8 +93,17 @@ static void repl()
             break;
         }
 
-        run_inline(input);
+        l = lexer_init(input);
+        p = parser_init(input, vm);
+
+        run_inline(l, p, vm);
+
+
+        parser_free(p);
+        lexer_free(l);
     }
+
+    vm_free(vm);
 }
 
 

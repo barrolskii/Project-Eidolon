@@ -134,15 +134,12 @@ void vm_run(vm_t *vm)
 
                 object_t obj_a = pop(vm);
                 ht_insert(vm->globals, obj_a.as.str, obj_val);
-                int val = ht_contains_key(vm->globals, "a");
-                printf("val: %d\n", val);
+                int val = ht_contains_key(vm->globals, obj_a.as.str);
 
                 break;
             }
             case OP_GET_GLOBAL:
             {
-                printf("Get global inst\n");
-
                 object_t obj = pop(vm);
 
                 int val = ht_contains_key(vm->globals, obj.as.str);
@@ -159,7 +156,7 @@ void vm_run(vm_t *vm)
                 break;
             }
             default:
-                printf("Default reached\n");
+                printf("Default reached\n"); /* This should never happen */
         }
 
         vm->ip++;

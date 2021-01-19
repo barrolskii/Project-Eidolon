@@ -188,8 +188,6 @@ static void number_int(parser_t *p)
 
 static void variable(parser_t *p)
 {
-    printf("Entered variable handler function\n");
-
     char *ident = malloc(sizeof(char) * p->curr.len);    // TODO: Memory leak again. Sort this out
     memccpy(ident, p->prev.start, *p->prev.start, p->prev.len + 1);
     ident[p->prev.len] = '\0';
@@ -249,8 +247,6 @@ static void var_declaration(parser_t *p)
     /* Skip the var token to the next identifier token */
     parser_advance(p);
 
-    printf("Inside var declaration\n");
-
     consume_tok(p, TOK_IDENT, "Expected variable identifier");
 
     char *ident = malloc(sizeof(char) * p->curr.len);            // TODO: memory leak! get garbage collector asap
@@ -259,7 +255,6 @@ static void var_declaration(parser_t *p)
 
     // Create an object for the name and put it on the stack
     object_t obj = { .type = OBJ_VAL_STR, .as.str = ident };
-    printf("obj str: %s\n", obj.as.str);
 
     // Add the string to the constants list
     uint8_t const_count = p->vm->const_count;
@@ -305,7 +300,6 @@ void parser_parse(parser_t *p)
             case TOK_FUNC:
             case TOK_VAR:
             {
-                printf("Starting var declaration\n");
                 var_declaration(p);
                 break;
             }

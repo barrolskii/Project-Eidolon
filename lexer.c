@@ -88,24 +88,24 @@ static token_t new_token(lexer_t *l, token_type type)
     return tok;
 }
 
-static token_type check_keyword(const char *start, unsigned len)
+static token_type check_keyword(const char *start)
 {
     switch (*start)
     {
-        case 'b': if (memcmp(start, "break", len) == 0) return TOK_BREAK; break;
-        case 'c': if (memcmp(start, "continue", len) == 0) return TOK_CONTINUE; break;
-        case 'e': if (memcmp(start, "else", len) == 0) return TOK_ELSE; break;
+        case 'b': if (memcmp(start, "break", 5) == 0) return TOK_BREAK; break;
+        case 'c': if (memcmp(start, "continue", 8) == 0) return TOK_CONTINUE; break;
+        case 'e': if (memcmp(start, "else", 4) == 0) return TOK_ELSE; break;
         case 'f':
         {
-            if (memcmp(start, "false", len) == 0) return TOK_FALSE;
-            if (memcmp(start, "func", len) == 0) return TOK_FUNC;
+            if (memcmp(start, "false", 5) == 0) return TOK_FALSE;
+            if (memcmp(start, "func", 4) == 0) return TOK_FUNC;
             break;
         }
-        case 'i': if (memcmp(start, "if", len) == 0) return TOK_IF; break;
-        case 'l': if (memcmp(start, "loop", len) == 0) return TOK_LOOP; break;
-        case 'r': if (memcmp(start, "return", len) == 0) return TOK_RETURN; break;
-        case 't': if (memcmp(start, "true", len) == 0) return TOK_TRUE; break;
-        case 'v': if (memcmp(start, "var", len) == 0) return TOK_VAR; break;
+        case 'i': if (memcmp(start, "if", 2) == 0) return TOK_IF; break;
+        case 'l': if (memcmp(start, "loop", 4) == 0) return TOK_LOOP; break;
+        case 'r': if (memcmp(start, "return", 6) == 0) return TOK_RETURN; break;
+        case 't': if (memcmp(start, "true", 4) == 0) return TOK_TRUE; break;
+        case 'v': if (memcmp(start, "var", 3) == 0) return TOK_VAR; break;
     }
 
     return TOK_IDENT;
@@ -115,8 +115,7 @@ static token_t new_identifer(lexer_t *l)
 {
     while (is_char(peek_char(l)) || is_digit(peek_char(l))) advance(l);
 
-    unsigned len = (l->curr - l->start);
-    token_type type = check_keyword(l->start, len);
+    token_type type = check_keyword(l->start);
 
     return new_token(l, type);
 }
