@@ -1,8 +1,27 @@
-#ifndef __PHANTOM_COMPILER_H_
-#define __PHANTOM_COMPILER_H_
+#ifndef __COMPILER_H_
+#define __COMPILER_H_
 
-#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
 
-void compiler_compile_prog(const char *src);
+#include "object.h"
+#include "ast.h"
+#include "vm.h"
 
-#endif // __PHANTOM_COMPILER_H_
+typedef enum {
+    COMPILER_PARSE_ERROR,
+    COMPILER_RUNTIME_ERROR,
+    COMPILER_OK,
+} compiler_code_t;
+
+typedef struct {
+    vm_t *vm; /* Reference to the vm to push objects and instructions to */
+    uint32_t scope;
+} compiler_t;
+
+compiler_t *compiler_init(vm_t *vm);
+void compiler_free(compiler_t *c);
+compiler_code_t compiler_compile_program(compiler_t *c, ast_node_t *ast);
+
+#endif // __COMPILER_H_

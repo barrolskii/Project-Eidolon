@@ -1,27 +1,21 @@
-#ifndef __PHANTOM_PARSER_H_
-#define __PHANTOM_PARSER_H_
+#ifndef PARSER_H
+#define PARSER_H
 
-#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdint.h>
-#include <string.h>
 
 #include "lexer.h"
-#include "vm.h"
+#include "ast.h"
 
 typedef struct {
-    token_t prev;
-    token_t curr;
-    bool had_err;
-    lexer_t *l;
-    vm_t *vm;
+	token_t prev;
+	token_t curr;
+	lexer_t *l;
 } parser_t;
 
-parser_t *parser_init(const char *src, vm_t *vm);
+parser_t *parser_init(lexer_t *l);
 void parser_free(parser_t *p);
+ast_node_t *parser_parse_program(parser_t *p);
 
-void parser_advance(parser_t *p);
-void parser_parse(parser_t *p);
+#endif //PARSER_H
 
-#endif // __PHANTOM_PARSER_H_

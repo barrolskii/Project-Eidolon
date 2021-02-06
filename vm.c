@@ -2,166 +2,128 @@
 
 static object_t pop(vm_t *vm)
 {
-    object_t obj = vm->stack[vm->sp - 1];
-    vm->sp--;
-
-    return obj;
+    return vm->stack[--vm->sp];
 }
 
 static void push(vm_t *vm, object_t obj)
 {
-    if (vm->sp >= STACK_MAX)
-    {
-        fprintf(stderr, "Error: Stack overflow\n");
-        return;
-    }
-
-    vm->stack[vm->sp] = obj;
-    vm->sp++;
+    vm->stack[vm->sp++] = obj;
 }
 
-static void exec_binary_op(vm_t *vm)
+static void print_obj(object_t obj)
 {
-    op_code code = vm->instructions[vm->ip];
+    if (obj.type == OBJ_VAL_DOUBLE)
+        printf("obj: %f\n", obj.as.double_num);
+    else if (obj.type == OBJ_VAL_LONG)
+        printf("obj: %ld\n", obj.as.long_num);
+    else
+        printf("obj: %s\n", obj.as.str);
+}
 
-    switch (code)
+static void add_obj(vm_t *vm, object_t obj)
+{
+    if (!vm->head)
     {
-        case OP_ADD:
-        {
-            object_t b = pop(vm);
-            object_t a = pop(vm);
-            a.as.long_num += b.as.long_num;
-            push(vm, a);
-            break;
-        }
-        case OP_SUB:
-        {
-            object_t b = pop(vm);
-            object_t a = pop(vm);
-            a.as.long_num -= b.as.long_num;
-            push(vm, a);
-            break;
-        }
-        case OP_MUL:
-        {
-            object_t b = pop(vm);
-            object_t a = pop(vm);
-            a.as.long_num *= b.as.long_num;
-            push(vm, a);
-            break;
-        }
-        case OP_DIV:
-        {
-            object_t b = pop(vm);
-            object_t a = pop(vm);
-            a.as.long_num /= b.as.long_num;
-            push(vm, a);
-            break;
-        }
-        case OP_MOD:
-        {
-            object_t b = pop(vm);
-            object_t a = pop(vm);
-            a.as.long_num %= b.as.long_num;
-            push(vm, a);
-            break;
-        }
-        default:
-            printf("Other binary operations not yet implemented\n");
+        vm->head = malloc(sizeof(struct object_node));
+        vm->head->next = NULL;
+        vm->head->obj = malloc(sizeof(object_t));
+        memcpy(vm->head->obj, &obj, sizeof(object_t));
+    }
+
+    struct object_node *curr = vm->head;
+    while (curr->next)
+    {
+        curr = curr->next;
+    }
+
+    curr->next = malloc(sizeof(struct object_node));
+    curr->next->next = NULL;
+    curr->next->obj = malloc(sizeof(object_t));
+    memcpy(curr->next->obj, &obj, sizeof(object_t));
+}
+
+static void print_obj_list(vm_t *vm)
+{
+    struct object_node *curr = vm->head;
+
+    while (curr)
+    {
+        print_obj(*curr->obj);
+        curr = curr->next;
+    }
+}
+
+static void free_obj_list(vm_t *vm)
+{
+    struct object_node *curr = vm->head;
+    struct object_node *next = vm->head->next;
+
+    while (curr)
+    {
+        if (curr->obj->type == OBJ_VAL_STR) free(curr->obj->as.str);
+        free(curr->obj);
+        free(curr);
+
+        curr = next;
+        next = next->next;
     }
 }
 
 vm_t *vm_init()
 {
     vm_t *vm = malloc(sizeof(vm_t));
-    //vm->stack = calloc(STACK_MAX, sizeof(object_t));
     vm->sp = 0;
-    //vm->constants = NULL;
-    //vm->instructions = calloc(UINT8_MAX, sizeof(uint8_t));
     vm->ip = 0;
 
-    vm->const_count = 0;
-    vm->ci = 0;
-
-    vm->instruct_count = 0;
-
-    vm->globals = ht_init();
+    vm->globals = NULL;//ht_init();
 
     return vm;
 }
 
 void vm_free(vm_t *vm)
 {
-    //free(vm->stack);
-    //free(vm->instructions);
-
-    ht_free(vm->globals);
+    free_obj_list(vm);
+    //ht_free(vm->globals);
     free(vm);
 }
 
 void vm_run(vm_t *vm)
 {
-    while (vm->ip < vm->instruct_count)
+    printf("\n\nRunning vm\n");
+    printf("ip: %d\n", vm->ip);
+    printf("sp: %d\n", vm->sp);
+
+    for (int i = 0; i < vm->ip; i++)
     {
-        op_code code = vm->instructions[vm->ip];
-
-        switch (code)
+        switch (vm->instructions[i])
         {
-            case OP_CONST:
+            case OP_VAR_DECL:
             {
-                object_t obj = vm->constants[vm->ci];
-                push(vm, obj);
-                vm->ci++;
-                break;
-            }
-            case OP_ADD:
-            case OP_SUB:
-            case OP_MUL:
-            case OP_DIV:
-            case OP_MOD:
-                exec_binary_op(vm); break;
-            case OP_POP:
-            {
-                object_t obj = pop(vm);
-                if (obj.type == OBJ_VAL_LONG) printf("%ld\n", obj.as.long_num);
-                if (obj.type == OBJ_VAL_DOUBLE) printf("%f\n", obj.as.double_num);
-                if (obj.type == OBJ_VAL_STR)  printf("%s\n", obj.as.str);
+                object_t val = pop(vm);
+                object_t ident = pop(vm);
+
+                //print_obj(val);
+                //print_obj(ident);
+
+                /* TODO: Rework the hashtable to only use a pointer to the object */
+                //ht_insert(vm->globals, ident.as.str, &val);
+
+                add_obj(vm, val);
+
+                /* TODO: Get the garbage collector to clean these up */
+                if (val.type == OBJ_VAL_STR) free(val.as.str);
+                free(ident.as.str);
 
                 break;
             }
-            case OP_ADD_GLOBAL:
-            {
-                object_t obj_b = pop(vm);
-                object_t *obj_val = malloc(sizeof(object_t));
-                memcpy(obj_val, &obj_b, sizeof(object_t));
-
-                object_t obj_a = pop(vm);
-                ht_insert(vm->globals, obj_a.as.str, obj_val);
-                int val = ht_contains_key(vm->globals, obj_a.as.str);
-
+            case OP_EXIT:
+                /* TODO: Cleanup here */
                 break;
-            }
-            case OP_GET_GLOBAL:
-            {
-                object_t obj = pop(vm);
 
-                int val = ht_contains_key(vm->globals, obj.as.str);
-                if (!val)
-                {
-                    /* Runtime error */
-                    printf("Error: Undefined variable \n");
-                }
-
-                object_t obj_two;
-                ht_get_value(vm->globals, obj.as.str, &obj_two);
-                push(vm, obj_two);
-
-                break;
-            }
-            default:
-                printf("Default reached\n"); /* This should never happen */
+            default: break;
         }
-
-        vm->ip++;
     }
+
+    printf("\nPrinting objects\n\n");
+    print_obj_list(vm);
 }

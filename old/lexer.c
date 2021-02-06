@@ -64,9 +64,8 @@ static void skip_whitespace(lexer_t *l)
                 advance(l);
                 break;
             case '\n':
-                advance(l);
                 l->line++;
-                l->col = 0;
+                advance(l);
                 break;
             case '#':
                 while( (c = peek_char(l)) != '\n' && !is_script_end(c)) advance(l);

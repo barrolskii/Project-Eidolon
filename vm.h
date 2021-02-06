@@ -1,11 +1,10 @@
-#ifndef __PHANTOM_VM_H_
-#define __PHANTOM_VM_H_
+#ifndef __VM_H_
+#define __VM_H_
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "lexer.h"
 #include "object.h"
 #include "hashtable.h"
 
@@ -19,37 +18,28 @@ typedef enum {
     OP_DIV,
     OP_MOD,
     OP_POP,
-    OP_ADD_GLOBAL,
-    OP_GET_GLOBAL,
+    OP_VAR_DECL,
+    OP_EXIT,
 } op_code;
 
 struct object_node {
-    object_t *obj;
     struct object_node *next;
+    object_t *obj;
 };
 
 typedef struct {
-    //object_t *stack;
     object_t stack[STACK_MAX];
-    uint32_t sp;            /* Stack pointer */
+    uint32_t sp;
 
-    object_t constants[STACK_MAX];
-    uint32_t ci;            /* Constant index */
-    uint32_t const_count;   /* Total constants */
-
-    //object_t *constants;
-    //uint8_t *instructions;
-    //
     uint8_t instructions[UINT8_MAX];
-    uint32_t ip;             /* Instruction pointer */
-    uint32_t instruct_count;
+    uint8_t ip;
 
-    struct hash_table *globals; /* Table of all global variables */
+    struct object_node *head;    /* List of all objects that have been allocated */
+    struct hash_table *globals;
 } vm_t;
-
 
 vm_t *vm_init();
 void vm_free(vm_t *vm);
 void vm_run(vm_t *vm);
 
-#endif // __PHANTOM_VM_H_
+#endif // __VM_H_

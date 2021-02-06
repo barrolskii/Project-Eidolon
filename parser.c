@@ -1,4 +1,6 @@
 #include "parser.h"
+#include "debug.h"
+#include "lexer.h"
 
 typedef enum {
     OP_PREC_NONE,
@@ -22,17 +24,54 @@ typedef struct {
     op_prec prec;
 } parse_rule_t;
 
-/* Function declarations */
-static void parse_precedence(parser_t *p, op_prec prec);
-void parser_advance(parser_t *p);
-static parse_rule_t *get_rule(token_type type);
-static void binary_op(parser_t *p);
-static void number_int(parser_t *p);
-static void number_double(parser_t *p);
-static void string(parser_t *p);
-static void variable(parser_t *p);
+static void parser_advance(parser_t *p)
+{
+    p->prev = p->curr;
+    p->curr = lexer_next(p->l);
+}
 
-parse_rule_t parse_rules[] = {
+static void parser_err(parser_t *p, char *err_msg)
+{
+    fprintf(stderr, "[line %d: col: %d] Error: %s\n", p->curr.line, p->curr.col, err_msg);
+}
+
+static void consume_tok(parser_t *p, token_type type, char *err_msg)
+{
+    if (p->curr.type == type)
+    {
+        parser_advance(p);
+        return;
+    }
+
+    parser_err(p, err_msg);
+}
+
+static void variable(parser_t *p)
+{
+    printf("variable\n");
+}
+
+static void number_int(parser_t *p)
+{
+    printf("number_int\n");
+}
+
+static void number_double(parser_t *p)
+{
+    printf("number_double\n");
+}
+
+static void string(parser_t *p)
+{
+    printf("string\n");
+}
+
+static void binary_op(parser_t *p)
+{
+    printf("binary_op\n");
+}
+
+static parse_rule_t parse_rules[] = {
     /*              prefix  infix  operator precedence */
 
     [TOK_ILLEGAL] = { NULL, NULL, OP_PREC_NONE },
@@ -87,157 +126,6 @@ parse_rule_t parse_rules[] = {
     [TOK_FALSE]    = { NULL, NULL, OP_PREC_NONE },
 };
 
-static bool match_tok(token_t tok, token_type type)
-{
-    return tok.type == type;
-}
-
-static void parser_err(parser_t *p, const char *err_msg)
-{
-     fprintf(stderr, "[line %d : col %d] Error: %s\n", p->curr.line, p->curr.col, err_msg);
-}
-
-static void parser_err_at_curr(parser_t *p)
-{
-    fprintf(stderr, "[line %d : col %d] Error: ", p->curr.line, p->curr.col);
-
-    if (p->curr.type == TOK_ILLEGAL)
-        fprintf(stderr, "illegal character %.*s\n", p->curr.len, p->curr.start);
-}
-
-static void consume_tok(parser_t *p, token_type type, const char *err_msg)
-{
-    if (p->curr.type == type)
-    {
-        parser_advance(p);
-        return;
-    }
-
-    parser_err(p, err_msg);
-}
-
-parser_t *parser_init(const char *src, vm_t *vm)
-{
-    parser_t *p = malloc(sizeof(parser_t));
-    p->had_err = false;
-    p->l = lexer_init(src);
-    p->vm = vm;
-
-    return p;
-}
-
-void parser_free(parser_t *p)
-{
-    lexer_free(p->l);
-    free(p);
-}
-
-void parser_advance(parser_t *p)
-{
-    p->prev = p->curr;
-
-    p->curr = lexer_next(p->l);
-
-    if (p->curr.type == TOK_ERROR || p->curr.type == TOK_ILLEGAL)
-        parser_err_at_curr(p);
-}
-
-static void emit_byte(parser_t *p, uint8_t op)
-{
-    /* Get the index of the byte instruction */
-    uint8_t index = p->vm->instruct_count;
-
-    p->vm->instructions[index] = op;
-    p->vm->instruct_count++;
-}
-
-static void binary_op(parser_t *p)
-{
-    /* Keep track of the current operator */
-    token_type operator_type = p->prev.type;
-
-    /* Push the right operand onto the stack before the operator */
-    parse_rule_t *rule = get_rule(operator_type);
-    parse_precedence(p, rule->prec + 1);
-
-    switch (operator_type)
-    {
-        case TOK_PLUS: emit_byte(p, OP_ADD); break;
-        case TOK_MINUS: emit_byte(p, OP_SUB); break;
-        case TOK_MULTIPLY: emit_byte(p, OP_MUL); break;
-        case TOK_DIVIDE: emit_byte(p, OP_DIV); break;
-        case TOK_MODULO: emit_byte(p, OP_MOD); break;
-        default: break;
-            /* Unreachable */
-    }
-}
-
-static void number_int(parser_t *p)
-{
-    /* TODO: Update this to use the garbage collector */
-
-    long value = strtol(p->prev.start, NULL, 10);
-    object_t obj = { .type = OBJ_VAL_LONG, .as.long_num = value };
-
-    uint8_t const_count = p->vm->const_count;
-
-    /* Add the value to the constant list */
-    p->vm->constants[const_count] = obj;
-    p->vm->const_count++;
-
-    emit_byte(p, OP_CONST);
-}
-
-static void number_double(parser_t *p)
-{
-    /* TODO: Update this to use the garbage collector */
-
-    double value = strtod(p->prev.start, NULL);
-    object_t obj = { .type = OBJ_VAL_DOUBLE, .as.double_num = value };
-
-    uint8_t const_count = p->vm->const_count;
-
-    /* Add the value to the constant list */
-    p->vm->constants[const_count] = obj;
-    p->vm->const_count++;
-
-    emit_byte(p, OP_CONST);
-}
-
-static void string(parser_t *p)
-{
-    char *value = NULL;
-
-    object_t obj = { .type = OBJ_VAL_STR, .as.str = calloc(sizeof(char), p->prev.len) };
-    memccpy(obj.as.str, p->prev.start + 1, 0, p->prev.len - 2);
-
-    uint8_t const_count = p->vm->const_count;
-
-    /* Add the value to the constant list */
-    p->vm->constants[const_count] = obj;
-    p->vm->const_count++;
-
-    emit_byte(p, OP_CONST);
-}
-
-static void variable(parser_t *p)
-{
-    char *ident = malloc(sizeof(char) * p->curr.len);    // TODO: Memory leak again. Sort this out
-    memccpy(ident, p->prev.start, *p->prev.start, p->prev.len + 1);
-    ident[p->prev.len] = '\0';
-
-    object_t obj = { .type = OBJ_VAL_STR, .as.str = ident };
-
-    // Add the string to the constants list
-    uint8_t const_count = p->vm->const_count;
-    p->vm->constants[const_count] = obj;
-    p->vm->const_count++;
-
-    // Emit the instructions
-    emit_byte(p, OP_CONST);
-    emit_byte(p, OP_GET_GLOBAL);
-}
-
 static parse_rule_t *get_rule(token_type type)
 {
     return &parse_rules[type];
@@ -256,7 +144,7 @@ static void parse_precedence(parser_t *p, op_prec prec)
 
     prefix_rule(p);
 
-    while (prec <= get_rule(p->curr.type)->prec)
+    while (prec <= get_rule(p->prev.type)->prec)
     {
         parser_advance(p);
         parse_func infix_rule = get_rule(p->prev.type)->infix;
@@ -264,50 +152,19 @@ static void parse_precedence(parser_t *p, op_prec prec)
     }
 }
 
+static void expr_stmt(parser_t *p)
+{
+
+}
+
 static void expression(parser_t *p)
 {
     parse_precedence(p, OP_PREC_ASSIGN);
 }
 
-static void expression_statement(parser_t *p)
-{
-    expression(p);
-    consume_tok(p, TOK_SEMICOLON, "Expected ';' at the end of expression");
-    emit_byte(p, OP_POP);
-}
-
-static void var_declaration(parser_t *p)
-{
-    /* Skip the var token to the next identifier token */
-    parser_advance(p);
-
-    consume_tok(p, TOK_IDENT, "Expected variable identifier");
-
-    char *ident = malloc(sizeof(char) * p->curr.len);            // TODO: memory leak! get garbage collector asap
-    memccpy(ident, p->prev.start, *p->prev.start, p->prev.len + 1); // TODO: change this from c11 func to c99
-    ident[p->prev.len] = '\0';
-
-    // Create an object for the name and put it on the stack
-    object_t obj = { .type = OBJ_VAL_STR, .as.str = ident };
-
-    // Add the string to the constants list
-    uint8_t const_count = p->vm->const_count;
-    p->vm->constants[const_count] = obj;
-    p->vm->const_count++;
-
-    // Emit the instruction
-    emit_byte(p, OP_CONST);
-
-    parser_advance(p);
-
-    expression(p);
-
-    emit_byte(p, OP_ADD_GLOBAL);
-}
-
 static void statement(parser_t *p)
 {
-    switch(p->curr.type)
+    switch (p->curr.type)
     {
         case TOK_IF:
         case TOK_RETURN:
@@ -318,29 +175,87 @@ static void statement(parser_t *p)
             return;
         }
         default:
-            expression_statement(p); // TODO: Think of a better name for this? expression statement sounds weird
+            expr_stmt(p);
     }
 }
 
-void parser_parse(parser_t *p)
+static int match_tok(token_t tok, token_type type)
 {
+    return tok.type == type;
+}
+
+static ast_node_t *var_decl(parser_t *p)
+{
+    printf("Var decl start\n");
+
+    /* Skip the current var token and advance to the ident token */
     parser_advance(p);
+
+    consume_tok(p, TOK_IDENT, "Expected variable definition");
+
+    ast_node_t *var_node = init_ast_node(AST_VAR_DECL);
+    printf("Ident: %.*s\n", p->prev.len, p->prev.start);
+
+    expr_t *expr = init_expr(p->curr); /* Assignment token '=' */
+    expr->left = init_expr(p->prev); /* The ident token */
+
+    parser_advance(p);
+    expr->right = init_expr(p->curr); /* The value of the assignment */
+    parser_advance(p);
+
+    var_node->expr = expr;
+
+    consume_tok(p, TOK_SEMICOLON, "Expected ';' at the end of expression");
+
+    printf("Var decl end\n");
+
+    return var_node;
+}
+
+parser_t *parser_init(lexer_t *l)
+{
+    parser_t *p = malloc(sizeof(parser_t));
+    p->l = l;
+    p->prev = lexer_next(l);
+    p->curr = p->prev;
+
+    return p;
+}
+
+void parser_free(parser_t *p)
+{
+    lexer_free(p->l);
+    free(p);
+}
+
+ast_node_t *parser_parse_program(parser_t *p)
+{
+    ast_node_t *ast = NULL;    /* The ast that the parser will return */
+    ast_node_t *curr = NULL;   /* Pointer to keep track of where we are in the tree */
 
     while (!match_tok(p->curr, TOK_EOF))
     {
-        /* Check the declaration type */
         switch (p->curr.type)
         {
             case TOK_FUNC:
             case TOK_VAR:
             {
-                var_declaration(p);
-                break;
+                ast_node_t *node = var_decl(p);
+
+                if (!ast)
+                {
+                    ast = node;
+                    curr = ast;
+                    break;
+                }
+
+                curr->next = node;
+                curr = curr->next;
             }
             default:
                 statement(p);
         }
-
-        parser_advance(p);
     }
+
+    return ast;
 }

@@ -1,27 +1,16 @@
 CC = gcc
-CFLAGS = -c -o
-OBJS = main.o lexer.o debug.o parser.o vm.o hashtable.o
+CFLAGS = -g -Wall
+FILES = $(shell ls *.c)
+#OBJS = ${FILES:%.c=%.o}#lexer.o debug.o
+OBJS = lexer.o debug.o parser.o ast.o compiler.o vm.o hashtable.o
 
-phantom: $(OBJS)
-	$(CC) -o phantom $(OBJS)
+all: phantom
 
-main.o: main.c
-	$(CC) $(CFLAGS) main.o main.c
+%.o: %.c %.h
+	$(CC) $(CFLAGS) -c $^
 
-lexer.o: lexer.c
-	$(CC) $(CFLAGS) lexer.o lexer.c
-
-parser.o: parser.c
-	$(CC) $(CFLAGS) parser.o parser.c
-
-vm.o: vm.c
-	$(CC) $(CFLAGS) vm.o vm.c
-
-debug.o: debug.c
-	$(CC) $(CFLAGS) debug.o debug.c
-
-hashtable.o: hashtable.c
-	$(CC) $(CFLAGS) hashtable.o hashtable.c
+phantom: $(OBJS) main.c
+	$(CC) $(CFLAGS) -o $@ $^
 
 clean:
-	rm phantom *.o
+	rm phantom *.o *.gch

@@ -4,7 +4,6 @@
 
 #include "lexer.h"
 #include "parser.h"
-#include "compiler.h"
 #include "vm.h"
 #include "debug.h"
 
@@ -39,10 +38,6 @@ static char *read_file(const char *path)
 
 static void print_help()
 {
-    printf("\nUsage: phantom [options] [arguments...]\n\n");
-    printf("To start phantom in interactive mode(REPL)\n  phantom\n\n");
-    printf("For help type:\n  phantom -h\n\n");
-
     /* TODO: Add list of arguments output here */
     /* -v or --version, -h or --help */
     printf("Help not implemented\n");
@@ -54,20 +49,39 @@ static void print_info()
     printf("Phantom 0.1\n");
 }
 
-static void run_inline(lexer_t *l)
+static void print_usage()
 {
+    printf("\nUsage: phantom [options] [arguments...]\n\n");
+    printf("To start phantom in interactive mode(REPL)\n  phantom\n\n");
+    printf("For help type:\n  phantom -h\n\n");
+}
+
+static void run_inline(lexer_t *l, parser_t *p, vm_t *vm)
+{
+#ifdef LEXER_DEBUG_OUTPUT
+    debug_print_token_header();
+
     token_t tok;
     while ( (tok = lexer_next(l)).type != TOK_EOF)
     {
         debug_print_token(tok);
     }
+#endif
+
+#ifdef PARSER_DEBUG_OUTPUT
+    parser_parse(p);
+#endif
+
+    vm_run(vm);
 }
 
 static void repl()
 {
     char input[1024];
 
-    lexer_t *l = NULL;
+    vm_t *vm = vm_init();
+    lexer_t *l = NULL;//lexer_init(input);
+    parser_t *p = NULL;//parser_init(input, vm);
 
     for (;;)
     {
@@ -80,19 +94,25 @@ static void repl()
         }
 
         l = lexer_init(input);
+        p = parser_init(input, vm);
 
-        run_inline(l);
+        run_inline(l, p, vm);
 
 
-        free(l);
+        parser_free(p);
+        lexer_free(l);
     }
+
+    vm_free(vm);
 }
+
 
 static void check_args(int argc, char **argv)
 {
     if (argc == 1)
     {
         repl();
+        //print_usage();
         exit(0);
     }
 
@@ -109,8 +129,6 @@ static void check_args(int argc, char **argv)
             print_info();
             exit(0);
         }
-
-        printf("arg: %s\n", argv[1]);
     }
 }
 
@@ -118,31 +136,12 @@ int main(int argc, char **argv)
 {
     check_args(argc, argv);
 
-    char *input = read_file(argv[1]);
 
-    lexer_t *l = lexer_init(input);
-    parser_t *p = parser_init(l);
-    vm_t *vm = vm_init();
-    compiler_t *c = compiler_init(vm);
+    //char *input = read_file(argv[1]);
 
-    ast_node_t *ast = parser_parse_program(p);
-    //if (!ast) printf("No ast supplied\n");
-
-    compiler_code_t code = compiler_compile_program(c, ast);
-    if (code == COMPILER_OK) printf("Successful compilation!\n");
-
-    vm_run(vm);
-
-    //ast_node_print_header();
-    //ast_node_print_node(ast);
-
-    ast_node_free(ast);
-
-    vm_free(vm);
-    compiler_free(c);
-    parser_free(p);
-    free(input);
-
+    //free(input);
 
     return 0;
 }
+
+

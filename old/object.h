@@ -1,14 +1,14 @@
-#ifndef __OBJECT_H_
-#define __OBJECT_H_
+#ifndef __PHANTOM_OBJECT_H_
+#define __PHANTOM_OBJECT_H_
 
 typedef enum {
     OBJ_VAL_LONG,
     OBJ_VAL_DOUBLE,
-    OBJ_VAL_STR,
-} object_val_t;
+    OBJ_VAL_STR
+} object_value_t;
 
 typedef struct {
-    object_val_t type;
+    object_value_t type;
     union {
         long long_num;
         double double_num;
@@ -17,4 +17,4 @@ typedef struct {
 
 } object_t;
 
-#endif // __OBJECT_H_
+#endif // __PHANTOM_OBJECT_H_
