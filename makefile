@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -c -o
-OBJS = main.o lexer.o debug.o parser.o vm.o
+OBJS = main.o lexer.o debug.o parser.o vm.o hashtable.o
 
 phantom: $(OBJS)
 	$(CC) -o phantom $(OBJS)
@@ -19,6 +19,9 @@ vm.o: vm.c
 
 debug.o: debug.c
 	$(CC) $(CFLAGS) debug.o debug.c
+
+hashtable.o: hashtable.c
+	$(CC) $(CFLAGS) hashtable.o hashtable.c
 
 clean:
 	rm phantom *.o
