@@ -1,7 +1,8 @@
+#define _CRTDBG_MAP_ALLOC
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <crtdbg.h>
 #include "lexer.h"
 #include "parser.h"
 #include "compiler.h"
@@ -141,8 +142,9 @@ int main(int argc, char **argv)
     vm_free(vm);
     compiler_free(c);
     parser_free(p);
+
     free(input);
 
-
+    _CrtDumpMemoryLeaks();
     return 0;
 }

@@ -15,7 +15,7 @@ static void push_obj(vm_t *vm, object_t obj)
 static void compile_var(compiler_t *c, expr_t *expr)
 {
     /* Left token is identifier so this is always a string object */
-    char *ident = malloc(sizeof(expr->left->tok.len));
+    char *ident = malloc(sizeof(char) * expr->left->tok.len + 1);
     memcpy(ident, expr->left->tok.start, expr->left->tok.len);
     ident[expr->left->tok.len] = '\0';
     object_t ident_obj = { .type = OBJ_VAL_STR, .as.str = ident };
@@ -41,7 +41,7 @@ static void compile_var(compiler_t *c, expr_t *expr)
     {
         val_obj.type = OBJ_VAL_STR;
 
-        char *str = malloc(sizeof(char) * expr->right->tok.len);
+        char *str = malloc(sizeof(char) * expr->right->tok.len + 1);
         memcpy(str, expr->right->tok.start, expr->right->tok.len);
         str[expr->right->tok.len] = '\0';
 

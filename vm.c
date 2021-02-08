@@ -59,16 +59,17 @@ static void print_obj_list(vm_t *vm)
 static void free_obj_list(vm_t *vm)
 {
     struct object_node *curr = vm->head;
-    struct object_node *next = vm->head->next;
+    struct object_node *next = vm->head;
 
-    while (curr)
+    while (next)
     {
+        next = curr->next;
+
         if (curr->obj->type == OBJ_VAL_STR) free(curr->obj->as.str);
         free(curr->obj);
         free(curr);
 
         curr = next;
-        next = next->next;
     }
 }
 
