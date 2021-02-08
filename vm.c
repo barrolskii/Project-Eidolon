@@ -24,6 +24,7 @@ static void add_obj(vm_t *vm, object_t obj)
 {
     if (!vm->head)
     {
+        printf("Adding object\n");
         vm->head = malloc(sizeof(struct object_node));
         vm->head->next = NULL;
         vm->head->obj = malloc(sizeof(object_t));
@@ -76,13 +77,14 @@ vm_t *vm_init()
     vm->ip = 0;
 
     vm->globals = NULL;//ht_init();
+    vm->head = NULL;
 
     return vm;
 }
 
 void vm_free(vm_t *vm)
 {
-    free_obj_list(vm);
+    //free_obj_list(vm);
     //ht_free(vm->globals);
     free(vm);
 }

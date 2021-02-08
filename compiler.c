@@ -41,7 +41,7 @@ static void compile_var(compiler_t *c, expr_t *expr)
     {
         val_obj.type = OBJ_VAL_STR;
 
-        char *str = malloc(sizeof(expr->right->tok.len));
+        char *str = malloc(sizeof(char) * expr->right->tok.len);
         memcpy(str, expr->right->tok.start, expr->right->tok.len);
         str[expr->right->tok.len] = '\0';
 
