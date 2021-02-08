@@ -20,17 +20,16 @@ static void print_obj(object_t obj)
         printf("obj: %s\n", obj.as.str);
 }
 
-static void add_obj(vm_t *vm, object_t obj)
+static struct object_node *add_obj(vm_t *vm, object_t obj)
 {
     if (!vm->head)
     {
-        printf("Adding object\n");
         vm->head = malloc(sizeof(struct object_node));
         vm->head->next = NULL;
         vm->head->obj = malloc(sizeof(object_t));
         memcpy(vm->head->obj, &obj, sizeof(object_t));
 
-        return;
+        return vm->head;
     }
 
     struct object_node *curr = vm->head;
@@ -43,6 +42,8 @@ static void add_obj(vm_t *vm, object_t obj)
     curr->next->next = NULL;
     curr->next->obj = malloc(sizeof(object_t));
     memcpy(curr->next->obj, &obj, sizeof(object_t));
+
+    return curr->next;
 }
 
 static void print_obj_list(vm_t *vm)
@@ -79,7 +80,7 @@ vm_t *vm_init()
     vm->sp = 0;
     vm->ip = 0;
 
-    vm->globals = NULL;//ht_init();
+    vm->globals = ht_init();
     vm->head = NULL;
 
     return vm;
@@ -88,7 +89,7 @@ vm_t *vm_init()
 void vm_free(vm_t *vm)
 {
     free_obj_list(vm);
-    //ht_free(vm->globals);
+    ht_free(vm->globals);
     free(vm);
 }
 
@@ -110,15 +111,11 @@ void vm_run(vm_t *vm)
                 //print_obj(val);
                 //print_obj(ident);
 
-                /* TODO: Rework the hashtable to only use a pointer to the object */
-                //ht_insert(vm->globals, ident.as.str, &val);
-
                 /* Add the value of the variable assignment to the object list */
-                add_obj(vm, val);
+                struct object_node *obj_val = add_obj(vm, val);
+                ht_insert(vm->globals, ident.as.str, obj_val->obj);
 
-                /* TODO: Get the garbage collector to clean these up */
-                //if (val.type == OBJ_VAL_STR) free(val.as.str);
-                free(ident.as.str);
+                printf("Contains [foo]: %d\n", ht_contains_key(vm->globals, "foo"));
 
                 break;
             }

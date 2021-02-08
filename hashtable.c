@@ -20,7 +20,6 @@ struct hash_table *ht_init()
     ht->items = calloc(TABLE_SIZE, sizeof(struct ht_item*));
     ht->count = 0;
 
-
     return ht;
 }
 
@@ -28,6 +27,8 @@ static void free_chain(struct ht_item *item)
 {
     if (item->next) free_chain(item->next);
 
+    /* The key is heap allocated so we must free that */
+    free(item->key);
     free(item);
 }
 
@@ -37,8 +38,11 @@ void ht_free(struct hash_table *ht)
     {
         if (!ht->items[i]) continue;
 
-        //free(ht->items[i]->key);
-        free(ht->items[i]->value);
+        /* The key is heap allocated so we must free that */
+        /* We don't free the value as the cleanup there is */
+        /* dealt by the garbage collector */
+        free(ht->items[i]->key);
+        //free(ht->items[i]->value);
 
         if (ht->items[i]->next) free_chain(ht->items[i]->next);
 
@@ -52,10 +56,11 @@ int ht_contains_key(struct hash_table *ht, char *key)
 {
     unsigned index = hash(key, strlen(key));
 
-    /* Quick and dirty fix. If there is not entry at the table then return 0 */
+    /* Quick and dirty fix. If there is no entry at the table then return 0 */
     if (!ht->items[index]) return 0;
     if (strcmp(ht->items[index]->key, key) == 0) return 1;
 
+    /* If the first key did not match then check the chain */
     struct ht_item *curr = ht->items[index]->next;
     while (curr)
     {
@@ -96,15 +101,6 @@ int ht_insert(struct hash_table *ht, char *key, object_t *value)
     }
 
     curr->next = new_item(ht, key, value);
-
-    return 0;
-}
-
-int ht_get_value(struct hash_table *ht, char *key, object_t *value)
-{
-    unsigned index = hash(key, strlen(key));
-
-    *value = *ht->items[index]->value;
 
     return 0;
 }
