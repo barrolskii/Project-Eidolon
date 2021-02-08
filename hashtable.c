@@ -104,3 +104,16 @@ int ht_insert(struct hash_table *ht, char *key, object_t *value)
 
     return 0;
 }
+
+int ht_update_key(struct hash_table *ht, char *key, object_t *value)
+{
+    unsigned index = hash(key, strlen(key));
+
+    /* Ideally this should never happen but just in case */
+    /* return 0 if the index is NULL */
+    if (!ht->items[index]) return 0;
+
+    ht->items[index]->value = value;
+
+    return 1;
+}

@@ -113,16 +113,22 @@ void vm_run(vm_t *vm)
 
                 /* Add the value of the variable assignment to the object list */
                 struct object_node *obj_val = add_obj(vm, val);
-                ht_insert(vm->globals, ident.as.str, obj_val->obj);
+
+                if (!ht_contains_key(vm->globals, ident.as.str))
+                {
+                    ht_insert(vm->globals, ident.as.str, obj_val->obj);
+                }
+                else
+                {
+                    /* TODO: This might not be needed here. Could be put in a set var operation */
+                    ht_update_key(vm->globals, ident.as.str, obj_val->obj);
+                }
 
                 printf("Contains [foo]: %d\n", ht_contains_key(vm->globals, "foo"));
 
                 break;
             }
-            case OP_EXIT:
-                /* TODO: Cleanup here */
-                break;
-
+            case OP_EXIT: break;
             default: break;
         }
     }
