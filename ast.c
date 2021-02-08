@@ -28,6 +28,8 @@ void expr_free(expr_t *expr)
 
 void ast_node_free(ast_node_t *node)
 {
+    if (!node) return;
+
     if (node->expr) expr_free(node->expr);
     if (node->next) ast_node_free(node->next);
     if (node) free(node);

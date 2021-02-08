@@ -152,14 +152,11 @@ static void parse_precedence(parser_t *p, op_prec prec)
     }
 }
 
-static void expr_stmt(parser_t *p)
-{
-
-}
-
 static void expression(parser_t *p)
 {
+    printf("In expression\n");
     parse_precedence(p, OP_PREC_ASSIGN);
+    //consume_tok(p, TOK_SEMICOLON, "Expected ';' at the end of expression");
 }
 
 static void statement(parser_t *p)
@@ -175,7 +172,7 @@ static void statement(parser_t *p)
             return;
         }
         default:
-            expr_stmt(p);
+            expression(p);
     }
 }
 
