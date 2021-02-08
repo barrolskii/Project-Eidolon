@@ -18,6 +18,26 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\ast.c" />
+    <ClCompile Include="..\..\compiler.c" />
+    <ClCompile Include="..\..\debug.c" />
+    <ClCompile Include="..\..\hashtable.c" />
+    <ClCompile Include="..\..\lexer.c" />
+    <ClCompile Include="..\..\main.c" />
+    <ClCompile Include="..\..\parser.c" />
+    <ClCompile Include="..\..\vm.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\ast.h" />
+    <ClInclude Include="..\..\compiler.h" />
+    <ClInclude Include="..\..\debug.h" />
+    <ClInclude Include="..\..\hashtable.h" />
+    <ClInclude Include="..\..\lexer.h" />
+    <ClInclude Include="..\..\object.h" />
+    <ClInclude Include="..\..\parser.h" />
+    <ClInclude Include="..\..\vm.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -116,7 +136,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -130,7 +150,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -140,21 +160,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\debug.c" />
-    <ClCompile Include="..\..\hashtable.c" />
-    <ClCompile Include="..\..\lexer.c" />
-    <ClCompile Include="..\..\main.c" />
-    <ClCompile Include="..\..\parser.c" />
-    <ClCompile Include="..\..\vm.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\debug.h" />
-    <ClInclude Include="..\..\hashtable.h" />
-    <ClInclude Include="..\..\lexer.h" />
-    <ClInclude Include="..\..\parser.h" />
-    <ClInclude Include="..\..\vm.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
