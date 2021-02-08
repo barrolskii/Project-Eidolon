@@ -29,6 +29,8 @@ static void add_obj(vm_t *vm, object_t obj)
         vm->head->next = NULL;
         vm->head->obj = malloc(sizeof(object_t));
         memcpy(vm->head->obj, &obj, sizeof(object_t));
+
+        return;
     }
 
     struct object_node *curr = vm->head;
@@ -84,7 +86,7 @@ vm_t *vm_init()
 
 void vm_free(vm_t *vm)
 {
-    //free_obj_list(vm);
+    free_obj_list(vm);
     //ht_free(vm->globals);
     free(vm);
 }
@@ -110,10 +112,11 @@ void vm_run(vm_t *vm)
                 /* TODO: Rework the hashtable to only use a pointer to the object */
                 //ht_insert(vm->globals, ident.as.str, &val);
 
+                /* Add the value of the variable assignment to the object list */
                 add_obj(vm, val);
 
                 /* TODO: Get the garbage collector to clean these up */
-                if (val.type == OBJ_VAL_STR) free(val.as.str);
+                //if (val.type == OBJ_VAL_STR) free(val.as.str);
                 free(ident.as.str);
 
                 break;
