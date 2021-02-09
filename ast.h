@@ -6,15 +6,15 @@
 #include "lexer.h"
 
 typedef enum {
-	AST_EXPR,
-	AST_STMT,
-	AST_VAR_DECL,
+    AST_EXPR,
+    AST_STMT,
+    AST_VAR_DECL,
 
-	/* TODO: Make sure these are accurate */
-	AST_TERM,
-	AST_FACTOR,
-	AST_IDENT,
-	AST_VAR,
+    /* TODO: Make sure these are accurate */
+    AST_TERM,
+    AST_FACTOR,
+    AST_IDENT,
+    AST_VAR,
 } ast_type_t;
 
 typedef struct expr {
@@ -24,7 +24,7 @@ typedef struct expr {
 } expr_t;
 
 typedef struct ast_node {
-	struct ast_node *next;
+    struct ast_node *next;
     ast_type_t type;
     expr_t *expr;
 } ast_node_t;
@@ -34,6 +34,8 @@ ast_node_t *init_ast_node(ast_type_t type);
 
 void expr_free(expr_t *expr);
 void ast_node_free(ast_node_t *node) ;
+
+int ast_append_node(ast_node_t *parent, ast_node_t *child);
 
 void expr_print_header();
 void ast_node_print_header();

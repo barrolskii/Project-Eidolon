@@ -8,7 +8,8 @@
 #include "object.h"
 #include "hashtable.h"
 
-#define STACK_MAX 2048
+#define STACK_MAX     2048
+#define CONSTANTS_MAX 64
 
 typedef enum {
     OP_CONST,
@@ -31,8 +32,11 @@ typedef struct {
     object_t stack[STACK_MAX];
     uint32_t sp;
 
-    uint8_t instructions[UINT8_MAX];
+    uint8_t instructions[UINT8_MAX]; /* TODO: Dynamic array */
     uint8_t ip;
+
+    object_t constants[CONSTANTS_MAX]; /* TODO: Dynamic array */
+    uint8_t cp;
 
     struct object_node *head;    /* List of all objects that have been allocated */
     struct hash_table *globals;

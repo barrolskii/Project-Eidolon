@@ -6,10 +6,22 @@ static void emit_byte(vm_t *vm, op_code code)
     vm->ip++;
 }
 
-static void push_obj(vm_t *vm, object_t obj)
+static void emit_bytes(vm_t *vm, int num_codes, op_code code, ...)
 {
-    vm->stack[vm->sp] = obj;
-    vm->sp++;
+    va_list list;
+
+    va_start(list, code);
+
+    for (int i = 0; i < num_codes; i++)
+        emit_byte(vm, va_arg(list, op_code));
+
+    va_end(list);
+}
+
+static void add_obj(vm_t *vm, object_t obj)
+{
+    vm->constants[vm->cp] = obj;
+    vm->cp++;
 }
 
 static void compile_var(compiler_t *c, expr_t *expr)
@@ -49,9 +61,73 @@ static void compile_var(compiler_t *c, expr_t *expr)
         printf("val obj str: %s\n", val_obj.as.str);
     }
 
-    push_obj(c->vm, ident_obj);
-    push_obj(c->vm, val_obj);
+    add_obj(c->vm, ident_obj);
+    add_obj(c->vm, val_obj);
+    //emit_bytes(c->vm, 3, OP_CONST, OP_CONST, OP_VAR_DECL);
+
+    emit_byte(c->vm, OP_CONST);
+    emit_byte(c->vm, OP_CONST);
     emit_byte(c->vm, OP_VAR_DECL);
+}
+
+static void compile_bin_expr(compiler_t *c, expr_t *expr)
+{
+    object_t left_op;
+    object_t right_op;
+
+    left_op.type = (expr->left->tok.type == TOK_INT ? OBJ_VAL_LONG : OBJ_VAL_DOUBLE);
+    right_op.type = (expr->right->tok.type == TOK_INT ? OBJ_VAL_LONG : OBJ_VAL_DOUBLE);
+
+    /* Set up the objects value for the stack dependent on their type */
+    if (left_op.type == OBJ_VAL_LONG)
+    {
+        left_op.as.long_num = strtol(expr->left->tok.start, NULL, 10);
+    }
+    else if (left_op.type == OBJ_VAL_DOUBLE)
+    {
+        left_op.as.double_num = strtod(expr->left->tok.start, NULL);
+    }
+    else
+    {
+        /* TODO: Return error if we try this with strings */
+        /* String */
+    }
+
+    if (right_op.type == OBJ_VAL_LONG)
+    {
+        right_op.as.long_num = strtol(expr->right->tok.start, NULL, 10);
+    }
+    else if (right_op.type == OBJ_VAL_DOUBLE)
+    {
+        right_op.as.double_num = strtod(expr->right->tok.start, NULL);
+    }
+    else
+    {
+        /* TODO: Return error if we try this with strings */
+        /* String */
+    }
+
+    add_obj(c->vm, left_op);
+    add_obj(c->vm, right_op);
+    emit_byte(c->vm, OP_CONST);
+    emit_byte(c->vm, OP_CONST);
+
+    /* Push the binary instruction onto the stack dependent on the operation */
+    switch (expr->tok.type)
+    {
+        case TOK_PLUS: emit_byte(c->vm, OP_ADD); break;
+        case TOK_MINUS:  emit_byte(c->vm, OP_SUB); break;
+        case TOK_MULTIPLY: emit_byte(c->vm, OP_MUL); break;
+        case TOK_DIVIDE: emit_byte(c->vm, OP_DIV); break;
+        case TOK_MODULO: emit_byte(c->vm, OP_MOD); break;
+        default:
+            fprintf(stderr,
+            "Compile binary operator reached default with type: %s\n",
+            token_get_type_literal(expr->tok.type));
+    }
+
+
+    emit_byte(c->vm, OP_POP);
 }
 
 static int compile_expr(compiler_t *c, expr_t *expr)
@@ -66,7 +142,15 @@ static int compile_expr(compiler_t *c, expr_t *expr)
             compile_var(c, expr);
             break;
         }
-
+        case TOK_PLUS:
+        case TOK_MINUS:
+        case TOK_MULTIPLY:
+        case TOK_DIVIDE:
+        case TOK_MODULO:
+        {
+            compile_bin_expr(c, expr);
+            break;
+        }
         default: break;
     }
 

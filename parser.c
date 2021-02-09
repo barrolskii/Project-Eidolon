@@ -16,7 +16,7 @@ typedef enum {
     OP_PREC_PRIMARY
 } op_prec; /* Operator precedence */
 
-typedef void (*parse_func)(parser_t *p);
+typedef expr_t *(*parse_func)(parser_t *p);
 
 typedef struct {
     parse_func prefix;
@@ -46,29 +46,47 @@ static void consume_tok(parser_t *p, token_type type, char *err_msg)
     parser_err(p, err_msg);
 }
 
-static void variable(parser_t *p)
+static expr_t *variable(parser_t *p)
 {
     printf("variable\n");
+
+    return NULL;
 }
 
-static void number_int(parser_t *p)
+static expr_t *number_int(parser_t *p)
 {
     printf("number_int\n");
+    //printf("%s -- %.*s\n", token_get_type_literal(p->prev.type), p->prev.len, p->prev.start);
+
+    expr_t *num = init_expr(p->prev);
+
+    return num;
 }
 
-static void number_double(parser_t *p)
+static expr_t *number_double(parser_t *p)
 {
     printf("number_double\n");
+
+    return NULL;
 }
 
-static void string(parser_t *p)
+static expr_t *string(parser_t *p)
 {
     printf("string\n");
+
+    return NULL;
 }
 
-static void binary_op(parser_t *p)
+static expr_t *binary_op(parser_t *p)
 {
     printf("binary_op\n");
+
+    expr_t *op = init_expr(p->prev);
+    op->right = init_expr(p->curr);
+
+    parser_advance(p);
+
+    return op;
 }
 
 static parse_rule_t parse_rules[] = {
@@ -131,7 +149,7 @@ static parse_rule_t *get_rule(token_type type)
     return &parse_rules[type];
 }
 
-static void parse_precedence(parser_t *p, op_prec prec)
+static expr_t *parse_precedence(parser_t *p, op_prec prec)
 {
     parser_advance(p);
 
@@ -139,27 +157,42 @@ static void parse_precedence(parser_t *p, op_prec prec)
     if (!prefix_rule)
     {
         parser_err(p, "Expected expression");
-        return;
+        return NULL; /* TODO: Return null for now. Need to return error nodes */
     }
 
-    prefix_rule(p);
+    /* TODO: Remove comment. This should contain the binary expression */
+    expr_t *prefix = prefix_rule(p);
+    expr_t *infix = NULL;
 
-    while (prec <= get_rule(p->prev.type)->prec)
+    while (prec <= get_rule(p->curr.type)->prec)
     {
+        printf("In while loop\n");
         parser_advance(p);
         parse_func infix_rule = get_rule(p->prev.type)->infix;
-        infix_rule(p);
+        infix = infix_rule(p);
+
+        /* Set the left node of the expression to be the prefix of the expression */
+        infix->left = prefix;
     }
+
+    return infix;
 }
 
-static void expression(parser_t *p)
+static ast_node_t *expression(parser_t *p)
 {
     printf("In expression\n");
-    parse_precedence(p, OP_PREC_ASSIGN);
-    //consume_tok(p, TOK_SEMICOLON, "Expected ';' at the end of expression");
+
+    ast_node_t *ast_node = init_ast_node(AST_EXPR);
+    expr_t *expr = parse_precedence(p, OP_PREC_ASSIGN);
+
+    ast_node->expr = expr;
+
+    consume_tok(p, TOK_SEMICOLON, "Expected ';' at the end of expression");
+
+    return ast_node;
 }
 
-static void statement(parser_t *p)
+static ast_node_t *statement(parser_t *p)
 {
     switch (p->curr.type)
     {
@@ -169,10 +202,10 @@ static void statement(parser_t *p)
         case TOK_LBRACE:
         {
             printf("Statements not yet implemented\n");
-            return;
+            return NULL; /* TODO: Error node here */
         }
         default:
-            expression(p);
+            return expression(p);
     }
 }
 
@@ -183,6 +216,9 @@ static int match_tok(token_t tok, token_type type)
 
 static ast_node_t *var_decl(parser_t *p)
 {
+    /* TODO: Add expression recursive decent parsing here to allow for expressions to be */
+    /* parsed correctly */
+
     printf("Var decl start\n");
 
     /* Skip the current var token and advance to the ident token */
@@ -248,9 +284,23 @@ ast_node_t *parser_parse_program(parser_t *p)
 
                 curr->next = node;
                 curr = curr->next;
+
+                break;
             }
             default:
-                statement(p);
+            {
+                ast_node_t *expr_node = statement(p);
+
+                if (!ast)
+                {
+                    ast = expr_node;
+                    curr = ast;
+                    break;
+                }
+
+                curr->next = expr_node;
+                curr = curr->next;
+            }
         }
     }
 

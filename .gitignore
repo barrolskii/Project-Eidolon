@@ -1,6 +1,7 @@
 *.exe
 *.o
 *.gch
+*.rdbg
 phantom
 
 ## Ignore Visual Studio temporary files, build results, and

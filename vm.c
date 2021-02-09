@@ -79,6 +79,7 @@ vm_t *vm_init()
     vm_t *vm = malloc(sizeof(vm_t));
     vm->sp = 0;
     vm->ip = 0;
+    vm->cp = 0;
 
     vm->globals = ht_init();
     vm->head = NULL;
@@ -96,20 +97,164 @@ void vm_free(vm_t *vm)
 void vm_run(vm_t *vm)
 {
     printf("\n\nRunning vm\n");
-    printf("ip: %d\n", vm->ip);
-    printf("sp: %d\n", vm->sp);
+    vm->cp = 0; // TODO: This is a hack for now
 
     for (int i = 0; i < vm->ip; i++)
     {
         switch (vm->instructions[i])
         {
+            case OP_CONST:
+            {
+                object_t obj = vm->constants[vm->cp++];
+                push(vm, obj);
+
+                break;
+            }
+            case OP_ADD:
+            {
+                object_t b = pop(vm);
+                object_t a = pop(vm);
+
+                if (a.type == OBJ_VAL_DOUBLE && b.type == OBJ_VAL_DOUBLE)
+                {
+                    a.as.double_num += b.as.double_num;
+
+                    printf("Object add: %f\n", a.as.double_num);
+                }
+                else if (a.type == OBJ_VAL_LONG && b.type == OBJ_VAL_LONG)
+                {
+                    a.as.long_num += b.as.long_num;
+
+                    printf("Object add: %ld\n", a.as.long_num);
+                }
+                else
+                {
+                    /* TODO: Return runtime error here */
+                    printf("Invalid operands\n");
+                }
+
+                push(vm, a);
+                break;
+            }
+            case OP_SUB:
+            {
+                object_t b = pop(vm);
+                object_t a = pop(vm);
+
+                if (a.type == OBJ_VAL_DOUBLE && b.type == OBJ_VAL_DOUBLE)
+                {
+                    a.as.double_num -= b.as.double_num;
+
+                    printf("Object sub: %f\n", a.as.double_num);
+                }
+                else if (a.type == OBJ_VAL_LONG && b.type == OBJ_VAL_LONG)
+                {
+                    a.as.long_num -= b.as.long_num;
+
+                    printf("Object sub: %ld\n", a.as.long_num);
+                }
+                else
+                {
+                    /* TODO: Return runtime error here */
+                    printf("Invalid operands\n");
+                }
+
+                push(vm, a);
+                break;
+            }
+            case OP_MUL:
+            {
+                object_t b = pop(vm);
+                object_t a = pop(vm);
+
+                if (a.type == OBJ_VAL_DOUBLE && b.type == OBJ_VAL_DOUBLE)
+                {
+                    a.as.double_num *= b.as.double_num;
+
+                    printf("Object mul: %f\n", a.as.double_num);
+                }
+                else if (a.type == OBJ_VAL_LONG && b.type == OBJ_VAL_LONG)
+                {
+                    a.as.long_num *= b.as.long_num;
+
+                    printf("Object mul: %ld\n", a.as.long_num);
+                }
+                else
+                {
+                    /* TODO: Return runtime error here */
+                    printf("Invalid operands\n");
+                }
+
+                push(vm, a);
+                break;
+            }
+            case OP_DIV:
+            {
+                object_t b = pop(vm);
+                object_t a = pop(vm);
+
+                if (a.type == OBJ_VAL_DOUBLE && b.type == OBJ_VAL_DOUBLE)
+                {
+                    a.as.double_num /= b.as.double_num;
+
+                    printf("Object div: %f\n", a.as.double_num);
+                }
+                else if (a.type == OBJ_VAL_LONG && b.type == OBJ_VAL_LONG)
+                {
+                    a.as.long_num /= b.as.long_num;
+
+                    printf("Object div: %ld\n", a.as.long_num);
+                }
+                else
+                {
+                    /* TODO: Return runtime error here */
+                    printf("Invalid operands\n");
+                }
+
+                push(vm, a);
+                break;
+            }
+            case OP_MOD:
+            {
+                object_t b = pop(vm);
+                object_t a = pop(vm);
+
+                if (a.type == OBJ_VAL_DOUBLE && b.type == OBJ_VAL_DOUBLE)
+                {
+                    //a.as.double_num %= b.as.double_num;
+                    printf("Error: unable to modulo doubles\n");
+
+                    //printf("Object add: %f\n", a.as.double_num);
+                }
+                else if (a.type == OBJ_VAL_LONG && b.type == OBJ_VAL_LONG)
+                {
+                    a.as.long_num %= b.as.long_num;
+
+                    printf("Object mod: %ld\n", a.as.long_num);
+                }
+                else
+                {
+                    /* TODO: Return runtime error here */
+                    printf("Invalid operands\n");
+                }
+
+                push(vm, a);
+                break;
+            }
+            case OP_POP:
+            {
+                printf("OP_POP\n");
+                object_t obj = pop(vm);
+                print_obj(obj);
+
+                if (obj.type == OBJ_VAL_STR) free(obj.as.str);
+                break;
+            }
             case OP_VAR_DECL:
             {
                 object_t val = pop(vm);
                 object_t ident = pop(vm);
 
-                //print_obj(val);
-                //print_obj(ident);
 
                 /* Add the value of the variable assignment to the object list */
                 struct object_node *obj_val = add_obj(vm, val);
@@ -123,8 +268,6 @@ void vm_run(vm_t *vm)
                     /* TODO: This might not be needed here. Could be put in a set var operation */
                     ht_update_key(vm->globals, ident.as.str, obj_val->obj);
                 }
-
-                printf("Contains [foo]: %d\n", ht_contains_key(vm->globals, "foo"));
 
                 break;
             }
