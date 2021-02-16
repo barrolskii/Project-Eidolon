@@ -1,6 +1,9 @@
+#define _CRTDBG_MAP_ALLOC
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <crtdbg.h>
 
 #include "lexer.h"
 #include "parser.h"
@@ -68,6 +71,12 @@ static void repl()
     char input[1024];
 
     lexer_t *l = NULL;
+    parser_t *p = NULL;
+    ast_node_t *ast = NULL;
+    compiler_t *c = NULL;
+    vm_t *vm = vm_init();
+
+    compiler_code_t code;
 
     for (;;)
     {
@@ -80,12 +89,22 @@ static void repl()
         }
 
         l = lexer_init(input);
+        p = parser_init(l);
+        ast = parser_parse_program(p);
+        c = compiler_init(vm);
 
-        run_inline(l);
+        code = compiler_compile_program(c, ast);
+
+        vm_run(vm);
+        //run_inline(l);
 
 
-        free(l);
+        parser_free(p);
+        ast_node_free(ast); // TODO: Use the better named version of the function
+        compiler_free(c);
     }
+
+    vm_free(vm);
 }
 
 static void check_args(int argc, char **argv)
@@ -127,15 +146,16 @@ int main(int argc, char **argv)
 
     ast_node_t *ast = parser_parse_program(p);
     //if (!ast) printf("No ast supplied\n");
-
+    
     compiler_code_t code = compiler_compile_program(c, ast);
-    if (code == COMPILER_OK) printf("Successful compilation!\n");
+    //if (code == COMPILER_OK) printf("Successful compilation!\n");
 
     vm_run(vm);
 
     //ast_node_print_header();
     //ast_node_print_node(ast);
 
+    // TODO: Rename this to reflect that it recursively frees
     ast_node_free(ast);
 
     vm_free(vm);
@@ -143,6 +163,8 @@ int main(int argc, char **argv)
     parser_free(p);
 
     free(input);
+
+    _CrtDumpMemoryLeaks();
 
     return 0;
 }

@@ -6,6 +6,7 @@ static void emit_byte(vm_t *vm, op_code code)
     vm->ip++;
 }
 
+/* TODO: Fix this */
 static void emit_bytes(vm_t *vm, int num_codes, op_code code, ...)
 {
     va_list list;
@@ -24,6 +25,26 @@ static void add_obj(vm_t *vm, object_t obj)
     vm->cp++;
 }
 
+static void compile_num(compiler_t *c, expr_t *expr)
+{
+    object_t num = { .type = OBJ_VAL_LONG, .as.long_num = strtol(expr->tok.start, NULL, 10) };
+    add_obj(c->vm, num);
+    emit_byte(c->vm, OP_CONST);
+}
+
+static void compile_double(compiler_t *c, expr_t *expr)
+{
+    object_t num = { .type = OBJ_VAL_DOUBLE, .as.double_num = strtod(expr->tok.start, NULL)};
+    add_obj(c->vm, num);
+    emit_byte(c->vm, OP_CONST);
+}
+
+static void compile_string(compiler_t *c, expr_t *expr)
+{
+
+}
+
+/* TODO: Clean this up */
 static void compile_var(compiler_t *c, expr_t *expr)
 {
     /* Left token is identifier so this is always a string object */
@@ -72,62 +93,28 @@ static void compile_var(compiler_t *c, expr_t *expr)
 
 static void compile_bin_expr(compiler_t *c, expr_t *expr)
 {
-    object_t left_op;
-    object_t right_op;
+    printf("compile bin expr\n");
 
-    left_op.type = (expr->left->tok.type == TOK_INT ? OBJ_VAL_LONG : OBJ_VAL_DOUBLE);
-    right_op.type = (expr->right->tok.type == TOK_INT ? OBJ_VAL_LONG : OBJ_VAL_DOUBLE);
+    printf("%.*s\n", expr->tok.len, expr->tok.start);
 
-    /* Set up the objects value for the stack dependent on their type */
-    if (left_op.type == OBJ_VAL_LONG)
-    {
-        left_op.as.long_num = strtol(expr->left->tok.start, NULL, 10);
-    }
-    else if (left_op.type == OBJ_VAL_DOUBLE)
-    {
-        left_op.as.double_num = strtod(expr->left->tok.start, NULL);
-    }
-    else
-    {
-        /* TODO: Return error if we try this with strings */
-        /* String */
-    }
+    if (expr->left) compile_bin_expr(c, expr->left);
+    if (expr->right) compile_bin_expr(c, expr->right);
 
-    if (right_op.type == OBJ_VAL_LONG)
-    {
-        right_op.as.long_num = strtol(expr->right->tok.start, NULL, 10);
-    }
-    else if (right_op.type == OBJ_VAL_DOUBLE)
-    {
-        right_op.as.double_num = strtod(expr->right->tok.start, NULL);
-    }
-    else
-    {
-        /* TODO: Return error if we try this with strings */
-        /* String */
-    }
-
-    add_obj(c->vm, left_op);
-    add_obj(c->vm, right_op);
-    emit_byte(c->vm, OP_CONST);
-    emit_byte(c->vm, OP_CONST);
-
-    /* Push the binary instruction onto the stack dependent on the operation */
     switch (expr->tok.type)
     {
+        case TOK_INT: compile_num(c, expr); break;
+        case TOK_FLOAT: compile_double(c, expr); break;
+        case TOK_STRING: printf("string support not added for binary ops\n"); break;
+
         case TOK_PLUS: emit_byte(c->vm, OP_ADD); break;
-        case TOK_MINUS:  emit_byte(c->vm, OP_SUB); break;
+        case TOK_MINUS: emit_byte(c->vm, OP_SUB); break;
         case TOK_MULTIPLY: emit_byte(c->vm, OP_MUL); break;
         case TOK_DIVIDE: emit_byte(c->vm, OP_DIV); break;
         case TOK_MODULO: emit_byte(c->vm, OP_MOD); break;
         default:
-            fprintf(stderr,
-            "Compile binary operator reached default with type: %s\n",
-            token_get_type_literal(expr->tok.type));
+            /* TODO: Error here */
+            break;
     }
-
-
-    emit_byte(c->vm, OP_POP);
 }
 
 static int compile_expr(compiler_t *c, expr_t *expr)
@@ -149,6 +136,7 @@ static int compile_expr(compiler_t *c, expr_t *expr)
         case TOK_MODULO:
         {
             compile_bin_expr(c, expr);
+            emit_byte(c->vm, OP_POP);
             break;
         }
         default: break;

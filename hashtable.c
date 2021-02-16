@@ -49,6 +49,7 @@ void ht_free(struct hash_table *ht)
         free(ht->items[i]);
     }
 
+    free(ht->items);
     free(ht);
 }
 

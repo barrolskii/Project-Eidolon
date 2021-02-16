@@ -24,6 +24,12 @@ typedef struct {
     op_prec prec;
 } parse_rule_t;
 
+static expr_t *variable(parser_t *p);
+static expr_t *number_int(parser_t *p);
+static expr_t *number_double(parser_t *p);
+static expr_t *string(parser_t *p);
+static expr_t *binary_op(parser_t *p);
+
 static void parser_advance(parser_t *p)
 {
     p->prev = p->curr;
@@ -44,49 +50,6 @@ static void consume_tok(parser_t *p, token_type type, char *err_msg)
     }
 
     parser_err(p, err_msg);
-}
-
-static expr_t *variable(parser_t *p)
-{
-    printf("variable\n");
-
-    return NULL;
-}
-
-static expr_t *number_int(parser_t *p)
-{
-    printf("number_int\n");
-    //printf("%s -- %.*s\n", token_get_type_literal(p->prev.type), p->prev.len, p->prev.start);
-
-    expr_t *num = init_expr(p->prev);
-
-    return num;
-}
-
-static expr_t *number_double(parser_t *p)
-{
-    printf("number_double\n");
-
-    return NULL;
-}
-
-static expr_t *string(parser_t *p)
-{
-    printf("string\n");
-
-    return NULL;
-}
-
-static expr_t *binary_op(parser_t *p)
-{
-    printf("binary_op\n");
-
-    expr_t *op = init_expr(p->prev);
-    op->right = init_expr(p->curr);
-
-    parser_advance(p);
-
-    return op;
 }
 
 static parse_rule_t parse_rules[] = {
@@ -160,23 +123,93 @@ static expr_t *parse_precedence(parser_t *p, op_prec prec)
         return NULL; /* TODO: Return null for now. Need to return error nodes */
     }
 
-    /* TODO: Remove comment. This should contain the binary expression */
+    /* Left node of the expression */
     expr_t *prefix = prefix_rule(p);
-    expr_t *infix = NULL;
 
     while (prec <= get_rule(p->curr.type)->prec)
     {
-        printf("In while loop\n");
+        expr_t *infix = NULL;
+
         parser_advance(p);
         parse_func infix_rule = get_rule(p->prev.type)->infix;
         infix = infix_rule(p);
 
-        /* Set the left node of the expression to be the prefix of the expression */
+        if (!infix) return prefix;
+
+        /* TODO: Pass prefix to the infix function then shimmy them around? */
         infix->left = prefix;
+        prefix = infix;
     }
 
-    return infix;
+    /* TODO: Check if this is unreachable */
+    return prefix;
 }
+
+static expr_t *variable(parser_t *p)
+{
+    printf("variable\n");
+
+    return NULL;
+}
+
+static expr_t *number_int(parser_t *p)
+{
+    printf("number_int: %.*s\n", p->prev.len, p->prev.start);
+    //printf("%s -- %.*s\n", token_get_type_literal(p->prev.type), p->prev.len, p->prev.start);
+
+    expr_t *num = init_expr(p->prev);
+
+    return num;
+}
+
+static expr_t *number_double(parser_t *p)
+{
+    printf("number_double\n");
+
+    return NULL;
+}
+
+static expr_t *string(parser_t *p)
+{
+    printf("string\n");
+
+    return NULL;
+}
+
+static expr_t *binary_op(parser_t *p)
+{
+    printf("binary_op\n");
+
+    /* Store the binary token to keep track of it when this function is */
+    /* recursively called */
+    token_t bin_tok = p->prev;
+    token_type op_type = p->prev.type;
+
+    expr_t *op = init_expr(bin_tok);
+
+    /* The operator of the current expression */
+    //expr_t *op = init_expr(p->prev);
+    parse_rule_t *rule = get_rule(op_type);
+    op->right = parse_precedence(p, rule->prec + 1);
+
+    //parse_rule_t *rule = get_rule(p->prev.type);
+    //op->right = parse_precedence(p, rule->prec + 1);
+
+    //rule = get_rule(p->prev.type);
+    //op->left = parse_precedence(p, rule->prec + 1);
+
+    switch (op_type)
+    {
+        case TOK_PLUS: printf("plus\n"); break;
+        case TOK_MINUS: printf("minus\n"); break;
+        case TOK_MULTIPLY: printf("multiply\n"); break;
+        case TOK_DIVIDE: printf("divide\n"); break;
+        default: printf("Default bin reached\n");
+    }
+
+    return op;
+}
+
 
 static ast_node_t *expression(parser_t *p)
 {

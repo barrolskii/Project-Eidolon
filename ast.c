@@ -21,6 +21,8 @@ expr_t *init_expr(token_t tok)
 
 void expr_free(expr_t *expr)
 {
+    printf("freeing %.*s\n", expr->tok.len, expr->tok.start);
+
     if (expr->left) expr_free(expr->left);
     if (expr->right) expr_free(expr->right);
     if (expr) free(expr);

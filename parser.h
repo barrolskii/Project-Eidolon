@@ -8,8 +8,8 @@
 #include "ast.h"
 
 typedef struct {
-	token_t prev;
 	token_t curr;
+	token_t prev;
 	lexer_t *l;
 } parser_t;
 
