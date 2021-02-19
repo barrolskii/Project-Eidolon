@@ -12,15 +12,16 @@
 #define CONSTANTS_MAX 64
 
 typedef enum {
-    OP_CONST,
-    OP_ADD,
-    OP_SUB,
-    OP_MUL,
-    OP_DIV,
-    OP_MOD,
-    OP_POP,
-    OP_VAR_DECL,
-    OP_EXIT,
+    OP_CONST    = 0,
+    OP_ADD      = 1,
+    OP_SUB      = 2,
+    OP_MUL      = 3,
+    OP_DIV      = 4,
+    OP_MOD      = 5,
+    OP_POP      = 6,
+    OP_VAR_DECL = 7,
+    OP_VAR_GET  = 8,
+    OP_EXIT     = 127,
 } op_code;
 
 struct object_node {

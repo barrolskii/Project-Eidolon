@@ -102,6 +102,10 @@ static void repl()
         parser_free(p);
         ast_node_free(ast); // TODO: Use the better named version of the function
         compiler_free(c);
+
+        /* TODO: Maybe look into a clearer way of sorting this out */
+        vm->ip = 0;
+        vm->cp = 0;
     }
 
     vm_free(vm);
@@ -128,8 +132,6 @@ static void check_args(int argc, char **argv)
             print_info();
             exit(0);
         }
-
-        printf("arg: %s\n", argv[1]);
     }
 }
 

@@ -118,3 +118,12 @@ int ht_update_key(struct hash_table *ht, char *key, object_t *value)
 
     return 1;
 }
+
+object_t *ht_get_value(struct hash_table *ht, char *key)
+{
+    if (!ht_contains_key(ht, key)) return NULL;
+
+    unsigned index = hash(key, strlen(key));
+
+    return ht->items[index]->value;
+}

@@ -147,16 +147,14 @@ static expr_t *parse_precedence(parser_t *p, op_prec prec)
 
 static expr_t *variable(parser_t *p)
 {
-    printf("variable\n");
+    expr_t *ident = init_expr(p->prev);
 
-    return NULL;
+    return ident;
 }
 
+/* TODO: Turn these into one function */
 static expr_t *number_int(parser_t *p)
 {
-    printf("number_int: %.*s\n", p->prev.len, p->prev.start);
-    //printf("%s -- %.*s\n", token_get_type_literal(p->prev.type), p->prev.len, p->prev.start);
-
     expr_t *num = init_expr(p->prev);
 
     return num;
@@ -164,22 +162,20 @@ static expr_t *number_int(parser_t *p)
 
 static expr_t *number_double(parser_t *p)
 {
-    printf("number_double\n");
+    expr_t *num = init_expr(p->prev);
 
-    return NULL;
+    return num;
 }
 
 static expr_t *string(parser_t *p)
 {
-    printf("string\n");
+    expr_t *str = init_expr(p->prev);
 
-    return NULL;
+    return str;
 }
 
 static expr_t *binary_op(parser_t *p)
 {
-    printf("binary_op\n");
-
     /* Store the binary token to keep track of it when this function is */
     /* recursively called */
     token_t bin_tok = p->prev;
@@ -188,33 +184,14 @@ static expr_t *binary_op(parser_t *p)
     expr_t *op = init_expr(bin_tok);
 
     /* The operator of the current expression */
-    //expr_t *op = init_expr(p->prev);
     parse_rule_t *rule = get_rule(op_type);
     op->right = parse_precedence(p, rule->prec + 1);
-
-    //parse_rule_t *rule = get_rule(p->prev.type);
-    //op->right = parse_precedence(p, rule->prec + 1);
-
-    //rule = get_rule(p->prev.type);
-    //op->left = parse_precedence(p, rule->prec + 1);
-
-    switch (op_type)
-    {
-        case TOK_PLUS: printf("plus\n"); break;
-        case TOK_MINUS: printf("minus\n"); break;
-        case TOK_MULTIPLY: printf("multiply\n"); break;
-        case TOK_DIVIDE: printf("divide\n"); break;
-        default: printf("Default bin reached\n");
-    }
 
     return op;
 }
 
-
 static ast_node_t *expression(parser_t *p)
 {
-    printf("In expression\n");
-
     ast_node_t *ast_node = init_ast_node(AST_EXPR);
     expr_t *expr = parse_precedence(p, OP_PREC_ASSIGN);
 
@@ -252,28 +229,23 @@ static ast_node_t *var_decl(parser_t *p)
     /* TODO: Add expression recursive decent parsing here to allow for expressions to be */
     /* parsed correctly */
 
-    printf("Var decl start\n");
-
     /* Skip the current var token and advance to the ident token */
     parser_advance(p);
 
     consume_tok(p, TOK_IDENT, "Expected variable definition");
 
     ast_node_t *var_node = init_ast_node(AST_VAR_DECL);
-    printf("Ident: %.*s\n", p->prev.len, p->prev.start);
 
     expr_t *expr = init_expr(p->curr); /* Assignment token '=' */
     expr->left = init_expr(p->prev); /* The ident token */
 
     parser_advance(p);
-    expr->right = init_expr(p->curr); /* The value of the assignment */
-    parser_advance(p);
+    //expr->right = init_expr(p->curr); /* The value of the assignment */
+    expr->right = parse_precedence(p, OP_PREC_ASSIGN);
 
     var_node->expr = expr;
 
     consume_tok(p, TOK_SEMICOLON, "Expected ';' at the end of expression");
-
-    printf("Var decl end\n");
 
     return var_node;
 }

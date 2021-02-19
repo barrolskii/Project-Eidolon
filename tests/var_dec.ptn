@@ -1,3 +1,14 @@
 var foo = 2;
 var bar = 3.14;
 var bip = "Hello, World!";
+
+foo;
+bar;
+bip;
+
+var bap = 1 + 2 * 3 / 4;
+bap;
+
+var bop = bap;
+bop;
+yip;

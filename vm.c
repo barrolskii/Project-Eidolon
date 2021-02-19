@@ -13,11 +13,11 @@ static void push(vm_t *vm, object_t obj)
 static void print_obj(object_t obj)
 {
     if (obj.type == OBJ_VAL_DOUBLE)
-        printf("obj: %f\n", obj.as.double_num);
+        printf("%f\n", obj.as.double_num);
     else if (obj.type == OBJ_VAL_LONG)
-        printf("obj: %ld\n", obj.as.long_num);
+        printf("%ld\n", obj.as.long_num);
     else
-        printf("obj: %s\n", obj.as.str);
+        printf("%s\n", obj.as.str);
 }
 
 static struct object_node *add_obj(vm_t *vm, object_t obj)
@@ -96,7 +96,6 @@ void vm_free(vm_t *vm)
 
 void vm_run(vm_t *vm)
 {
-    printf("\n\nRunning vm\n");
     vm->cp = 0; // TODO: This is a hack for now
 
     for (int i = 0; i < vm->ip; i++)
@@ -118,14 +117,10 @@ void vm_run(vm_t *vm)
                 if (a.type == OBJ_VAL_DOUBLE && b.type == OBJ_VAL_DOUBLE)
                 {
                     a.as.double_num += b.as.double_num;
-
-                    printf("Object add: %f\n", a.as.double_num);
                 }
                 else if (a.type == OBJ_VAL_LONG && b.type == OBJ_VAL_LONG)
                 {
                     a.as.long_num += b.as.long_num;
-
-                    printf("Object add: %ld\n", a.as.long_num);
                 }
                 else
                 {
@@ -144,14 +139,10 @@ void vm_run(vm_t *vm)
                 if (a.type == OBJ_VAL_DOUBLE && b.type == OBJ_VAL_DOUBLE)
                 {
                     a.as.double_num -= b.as.double_num;
-
-                    printf("Object sub: %f\n", a.as.double_num);
                 }
                 else if (a.type == OBJ_VAL_LONG && b.type == OBJ_VAL_LONG)
                 {
                     a.as.long_num -= b.as.long_num;
-
-                    printf("Object sub: %ld\n", a.as.long_num);
                 }
                 else
                 {
@@ -170,14 +161,10 @@ void vm_run(vm_t *vm)
                 if (a.type == OBJ_VAL_DOUBLE && b.type == OBJ_VAL_DOUBLE)
                 {
                     a.as.double_num *= b.as.double_num;
-
-                    printf("Object mul: %f\n", a.as.double_num);
                 }
                 else if (a.type == OBJ_VAL_LONG && b.type == OBJ_VAL_LONG)
                 {
                     a.as.long_num *= b.as.long_num;
-
-                    printf("Object mul: %ld\n", a.as.long_num);
                 }
                 else
                 {
@@ -196,14 +183,10 @@ void vm_run(vm_t *vm)
                 if (a.type == OBJ_VAL_DOUBLE && b.type == OBJ_VAL_DOUBLE)
                 {
                     a.as.double_num /= b.as.double_num;
-
-                    printf("Object div: %f\n", a.as.double_num);
                 }
                 else if (a.type == OBJ_VAL_LONG && b.type == OBJ_VAL_LONG)
                 {
                     a.as.long_num /= b.as.long_num;
-
-                    printf("Object div: %ld\n", a.as.long_num);
                 }
                 else
                 {
@@ -229,8 +212,6 @@ void vm_run(vm_t *vm)
                 else if (a.type == OBJ_VAL_LONG && b.type == OBJ_VAL_LONG)
                 {
                     a.as.long_num %= b.as.long_num;
-
-                    printf("Object mod: %ld\n", a.as.long_num);
                 }
                 else
                 {
@@ -243,11 +224,10 @@ void vm_run(vm_t *vm)
             }
             case OP_POP:
             {
-                printf("OP_POP\n");
                 object_t obj = pop(vm);
                 print_obj(obj);
 
-                if (obj.type == OBJ_VAL_STR) free(obj.as.str);
+                //if (obj.type == OBJ_VAL_STR) free(obj.as.str); /* TODO: Possibly use garbage collector here? */
                 break;
             }
             case OP_VAR_DECL:
@@ -271,11 +251,32 @@ void vm_run(vm_t *vm)
 
                 break;
             }
+            case OP_VAR_GET:
+            {
+                object_t ident = pop(vm);
+
+                if (!ht_contains_key(vm->globals, ident.as.str))
+                {
+                    printf("Error: variable '%s' not declared\n", ident.as.str);
+
+                    /* TODO: For now skip the next pop operation but in future return a
+                     * runtime error and exit gracefully
+                     */
+                     i++;
+                }
+                else
+                {
+                    object_t *val = ht_get_value(vm->globals, ident.as.str);
+                    push(vm, *val);
+                    //print_obj(*val);
+                    free(ident.as.str); /* TODO: Garbage collector here? */
+                }
+                break;
+            }
             case OP_EXIT: break;
             default: break;
         }
     }
 
-    printf("\nPrinting objects\n\n");
-    print_obj_list(vm);
+    //print_obj_list(vm);
 }
