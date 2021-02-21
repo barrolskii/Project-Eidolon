@@ -72,7 +72,7 @@ static void compile_bin_expr(compiler_t *c, expr_t *expr)
     {
         case TOK_INT: compile_num(c, expr); break;
         case TOK_FLOAT: compile_double(c, expr); break;
-        case TOK_STRING: printf("string support not added for binary ops\n"); break;
+        case TOK_STRING: compile_string(c, expr); break;
 
         case TOK_PLUS: emit_byte(c->vm, OP_ADD); break;
         case TOK_MINUS: emit_byte(c->vm, OP_SUB); break;

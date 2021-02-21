@@ -1,5 +1,41 @@
 #include "vm.h"
 
+#define BINARY_OP(vm, op)                       \
+     object_t b           = pop(vm);            \
+     object_t a           = pop(vm);            \
+                                                \
+     if (a.type == OBJ_VAL_DOUBLE && b.type == OBJ_VAL_DOUBLE) \
+     {                                          \
+         a.as.double_num = a.as.double_num op b.as.double_num;    \
+     }                                          \
+     else if (a.type == OBJ_VAL_LONG && b.type == OBJ_VAL_LONG) \
+     {                                          \
+         a.as.long_num = a.as.long_num op b.as.long_num;      \
+     }                                          \
+     else                                       \
+     {                                          \
+         printf("Invalid operands\n"); /* TODO: Return runtime error here */ \
+     }                                          \
+                                                \
+     push(vm, a);
+
+
+/* TODO: Clean this up */
+#define COMPARE_OBJS(vm, op)                    \
+    object_t b = pop(vm);                       \
+    object_t a = pop(vm);                       \
+                                                \
+    if (a.type == OBJ_VAL_LONG && b.type == OBJ_VAL_LONG) \
+        a.as.long_num op b.as.long_num ? push(vm, obj_true) : push(vm, obj_false); \
+    else if (a.type == OBJ_VAL_DOUBLE && b.type == OBJ_VAL_DOUBLE) \
+        a.as.double_num op b.as.double_num ? push(vm, obj_true) : push(vm, obj_false); \
+    else if (a.type == OBJ_VAL_LONG && b.type == OBJ_VAL_DOUBLE) \
+        a.as.long_num op b.as.double_num ? push(vm, obj_true) : push(vm, obj_false); \
+    else if (a.type == OBJ_VAL_DOUBLE && b.type == OBJ_VAL_LONG) \
+        a.as.double_num op b.as.long_num ? push(vm, obj_true) : push(vm, obj_false); \
+    else                                        \
+        push(vm, obj_false)     // TODO: For now comparing incombatible types yields false
+
 static object_t obj_true = {
     .type = OBJ_VAL_BOOL,
     .as.str = "true"
@@ -121,94 +157,30 @@ void vm_run(vm_t *vm)
             }
             case OP_ADD:
             {
-                object_t b = pop(vm);
-                object_t a = pop(vm);
-
-                if (a.type == OBJ_VAL_DOUBLE && b.type == OBJ_VAL_DOUBLE)
-                {
-                    a.as.double_num += b.as.double_num;
-                }
-                else if (a.type == OBJ_VAL_LONG && b.type == OBJ_VAL_LONG)
-                {
-                    a.as.long_num += b.as.long_num;
-                }
-                else
-                {
-                    /* TODO: Return runtime error here */
-                    printf("Invalid operands\n");
-                }
-
-                push(vm, a);
+                BINARY_OP(vm, +);
                 break;
             }
             case OP_SUB:
             {
-                object_t b = pop(vm);
-                object_t a = pop(vm);
-
-                if (a.type == OBJ_VAL_DOUBLE && b.type == OBJ_VAL_DOUBLE)
-                {
-                    a.as.double_num -= b.as.double_num;
-                }
-                else if (a.type == OBJ_VAL_LONG && b.type == OBJ_VAL_LONG)
-                {
-                    a.as.long_num -= b.as.long_num;
-                }
-                else
-                {
-                    /* TODO: Return runtime error here */
-                    printf("Invalid operands\n");
-                }
-
-                push(vm, a);
+                BINARY_OP(vm, -);
                 break;
             }
             case OP_MUL:
             {
-                object_t b = pop(vm);
-                object_t a = pop(vm);
-
-                if (a.type == OBJ_VAL_DOUBLE && b.type == OBJ_VAL_DOUBLE)
-                {
-                    a.as.double_num *= b.as.double_num;
-                }
-                else if (a.type == OBJ_VAL_LONG && b.type == OBJ_VAL_LONG)
-                {
-                    a.as.long_num *= b.as.long_num;
-                }
-                else
-                {
-                    /* TODO: Return runtime error here */
-                    printf("Invalid operands\n");
-                }
-
-                push(vm, a);
+                BINARY_OP(vm, *);
                 break;
             }
             case OP_DIV:
             {
-                object_t b = pop(vm);
-                object_t a = pop(vm);
-
-                if (a.type == OBJ_VAL_DOUBLE && b.type == OBJ_VAL_DOUBLE)
-                {
-                    a.as.double_num /= b.as.double_num;
-                }
-                else if (a.type == OBJ_VAL_LONG && b.type == OBJ_VAL_LONG)
-                {
-                    a.as.long_num /= b.as.long_num;
-                }
-                else
-                {
-                    /* TODO: Return runtime error here */
-                    printf("Invalid operands\n");
-                }
-
-                push(vm, a);
+                BINARY_OP(vm, /);
                 break;
             }
             case OP_MOD:
             {
+                /* We can't use the BINARY_OP macro with the modulus operator
+                *  just because of how it works in C. You can't use the
+                *  modulus operator with floating point values
+                */
                 object_t b = pop(vm);
                 object_t a = pop(vm);
 
@@ -285,51 +257,33 @@ void vm_run(vm_t *vm)
             }
             case OP_GT:
             {
-                object_t b = pop(vm);
-                object_t a = pop(vm);
-
-                /* TODO: Make comparison function */
-                a.as.long_num > b.as.long_num ? push(vm, obj_true) : push(vm, obj_false);
+                /* TODO: See if you can make this a function. If not then leave as is */
+                COMPARE_OBJS(vm, >);
                 break;
             }
             case OP_GT_EQ:
             {
-                object_t b = pop(vm);
-                object_t a = pop(vm);
-
-                a.as.long_num >= b.as.long_num ? push(vm, obj_true) : push(vm, obj_false);
+                COMPARE_OBJS(vm, >=);
                 break;
             }
             case OP_LT:
             {
-                object_t b = pop(vm);
-                object_t a = pop(vm);
-
-                a.as.long_num < b.as.long_num ? push(vm, obj_true) : push(vm, obj_false);
+                COMPARE_OBJS(vm, <);
                 break;
             }
             case OP_LT_EQ:
             {
-                object_t b = pop(vm);
-                object_t a = pop(vm);
-
-                a.as.long_num <= b.as.long_num ? push(vm, obj_true) : push(vm, obj_false);
+                COMPARE_OBJS(vm, <=);
                 break;
             }
             case OP_EQ:
             {
-                object_t b = pop(vm);
-                object_t a = pop(vm);
-
-                a.as.long_num == b.as.long_num ? push(vm, obj_true) : push(vm, obj_false);
+                COMPARE_OBJS(vm, ==);
                 break;
             }
             case OP_NE:
             {
-                object_t b = pop(vm);
-                object_t a = pop(vm);
-
-                a.as.long_num != b.as.long_num ? push(vm, obj_true) : push(vm, obj_false);
+                COMPARE_OBJS(vm, !=);
                 break;
             }
             case OP_EXIT: break;
