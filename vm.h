@@ -21,6 +21,12 @@ typedef enum {
     OP_POP      = 6,
     OP_VAR_DECL = 7,
     OP_VAR_GET  = 8,
+    OP_GT       = 9,
+    OP_GT_EQ    = 10,
+    OP_LT       = 11,
+    OP_LT_EQ    = 12,
+    OP_EQ       = 13,
+    OP_NE       = 14,
     OP_EXIT     = 127,
 } op_code;
 

@@ -77,12 +77,12 @@ static parse_rule_t parse_rules[] = {
     [TOK_INCREMENT] = { NULL, NULL, OP_PREC_UNARY },
     [TOK_DECREMENT] = { NULL, NULL, OP_PREC_UNARY },
 
-    [TOK_LT]    = { NULL, NULL, OP_PREC_EQUALITY },
-    [TOK_GT]    = { NULL, NULL, OP_PREC_EQUALITY },
-    [TOK_NE]    = { NULL, NULL, OP_PREC_COMPARISON },
-    [TOK_EQ]    = { NULL, NULL, OP_PREC_COMPARISON },
-    [TOK_LT_EQ] = { NULL, NULL, OP_PREC_EQUALITY },
-    [TOK_GT_EQ] = { NULL, NULL, OP_PREC_EQUALITY },
+    [TOK_LT]    = { NULL, binary_op, OP_PREC_EQUALITY },
+    [TOK_GT]    = { NULL, binary_op, OP_PREC_EQUALITY },
+    [TOK_NE]    = { NULL, binary_op, OP_PREC_COMPARISON },
+    [TOK_EQ]    = { NULL, binary_op, OP_PREC_COMPARISON },
+    [TOK_LT_EQ] = { NULL, binary_op, OP_PREC_EQUALITY },
+    [TOK_GT_EQ] = { NULL, binary_op, OP_PREC_EQUALITY },
 
     [TOK_COMMA]     = { NULL, NULL, OP_PREC_NONE },
     [TOK_SEMICOLON] = { NULL, NULL, OP_PREC_NONE },

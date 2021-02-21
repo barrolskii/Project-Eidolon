@@ -1,5 +1,15 @@
 #include "vm.h"
 
+static object_t obj_true = {
+    .type = OBJ_VAL_BOOL,
+    .as.str = "true"
+};
+
+static object_t obj_false = {
+    .type = OBJ_VAL_BOOL,
+    .as.str = "false"
+};
+
 static object_t pop(vm_t *vm)
 {
     return vm->stack[--vm->sp];
@@ -271,6 +281,55 @@ void vm_run(vm_t *vm)
                     //print_obj(*val);
                     free(ident.as.str); /* TODO: Garbage collector here? */
                 }
+                break;
+            }
+            case OP_GT:
+            {
+                object_t b = pop(vm);
+                object_t a = pop(vm);
+
+                /* TODO: Make comparison function */
+                a.as.long_num > b.as.long_num ? push(vm, obj_true) : push(vm, obj_false);
+                break;
+            }
+            case OP_GT_EQ:
+            {
+                object_t b = pop(vm);
+                object_t a = pop(vm);
+
+                a.as.long_num >= b.as.long_num ? push(vm, obj_true) : push(vm, obj_false);
+                break;
+            }
+            case OP_LT:
+            {
+                object_t b = pop(vm);
+                object_t a = pop(vm);
+
+                a.as.long_num < b.as.long_num ? push(vm, obj_true) : push(vm, obj_false);
+                break;
+            }
+            case OP_LT_EQ:
+            {
+                object_t b = pop(vm);
+                object_t a = pop(vm);
+
+                a.as.long_num <= b.as.long_num ? push(vm, obj_true) : push(vm, obj_false);
+                break;
+            }
+            case OP_EQ:
+            {
+                object_t b = pop(vm);
+                object_t a = pop(vm);
+
+                a.as.long_num == b.as.long_num ? push(vm, obj_true) : push(vm, obj_false);
+                break;
+            }
+            case OP_NE:
+            {
+                object_t b = pop(vm);
+                object_t a = pop(vm);
+
+                a.as.long_num != b.as.long_num ? push(vm, obj_true) : push(vm, obj_false);
                 break;
             }
             case OP_EXIT: break;

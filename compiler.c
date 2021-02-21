@@ -79,6 +79,13 @@ static void compile_bin_expr(compiler_t *c, expr_t *expr)
         case TOK_MULTIPLY: emit_byte(c->vm, OP_MUL); break;
         case TOK_DIVIDE: emit_byte(c->vm, OP_DIV); break;
         case TOK_MODULO: emit_byte(c->vm, OP_MOD); break;
+
+        case TOK_LT: emit_byte(c->vm, OP_LT); break;
+        case TOK_LT_EQ: emit_byte(c->vm, OP_LT_EQ); break;
+        case TOK_GT: emit_byte(c->vm, OP_GT); break;
+        case TOK_GT_EQ: emit_byte(c->vm, OP_GT_EQ); break;
+        case TOK_EQ: emit_byte(c->vm, OP_EQ); break;
+        case TOK_NE: emit_byte(c->vm, OP_NE); break;
         default:
             /* TODO: Error here */
             break;
@@ -167,6 +174,12 @@ static int compile_expr(compiler_t *c, expr_t *expr)
         case TOK_MULTIPLY:
         case TOK_DIVIDE:
         case TOK_MODULO:
+        case TOK_GT:
+        case TOK_GT_EQ:
+        case TOK_LT:
+        case TOK_LT_EQ:
+        case TOK_EQ:
+        case TOK_NE:
         {
             compile_bin_expr(c, expr);
             emit_byte(c->vm, OP_POP);
