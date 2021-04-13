@@ -27,7 +27,7 @@ typedef enum {
     OP_LT_EQ    = 12,
     OP_EQ       = 13,
     OP_NE       = 14,
-    OP_EXIT     = 127,
+    OP_EXIT     = 255,
 } op_code;
 
 struct object_node {

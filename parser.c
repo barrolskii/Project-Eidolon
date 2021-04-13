@@ -29,6 +29,7 @@ static expr_t *number_int(parser_t *p);
 static expr_t *number_double(parser_t *p);
 static expr_t *string(parser_t *p);
 static expr_t *binary_op(parser_t *p);
+static expr_t *group(parser_t *p);
 
 static void parser_advance(parser_t *p)
 {
@@ -88,7 +89,7 @@ static parse_rule_t parse_rules[] = {
     [TOK_SEMICOLON] = { NULL, NULL, OP_PREC_NONE },
     [TOK_COMMENT]   = { NULL, NULL, OP_PREC_NONE },
 
-    [TOK_LPAREN]   = { NULL, NULL, OP_PREC_CALL },
+    [TOK_LPAREN]   = { group, NULL, OP_PREC_CALL },
     [TOK_RPAREN]   = { NULL, NULL, OP_PREC_NONE },
     [TOK_LBRACE]   = { NULL, NULL, OP_PREC_NONE },
     [TOK_RBRACE]   = { NULL, NULL, OP_PREC_NONE },
@@ -190,6 +191,41 @@ static expr_t *binary_op(parser_t *p)
     return op;
 }
 
+static expr_t *group(parser_t *p)
+{
+    expr_t *group = parse_precedence(p, OP_PREC_ASSIGN);
+    consume_tok(p, TOK_RPAREN, "Expected ')' at the end of grouping expression");
+
+    return group;
+}
+
+static ast_node_t *parse_if_statement(parser_t *p)
+{
+    ast_node_t *ast_node = init_ast_node(AST_STMT);
+    expr_t *if_expr = init_expr(p->prev);
+
+    parser_advance(p);
+    consume_tok(p, TOK_LPAREN, "Expected '(' after if keyword");
+
+    /* The left node will contain the expression */
+    if_expr->left = parse_precedence(p, OP_PREC_ASSIGN);
+
+    consume_tok(p, TOK_RPAREN, "Expected ')' at the end of expression");
+    consume_tok(p, TOK_LBRACE, "Expected '{' at the start of true branch");
+
+
+    /* TODO: For now just parse the true branch of the if statement */
+    if_expr->right = parse_precedence(p, OP_PREC_ASSIGN);
+    parser_advance(p);
+
+    consume_tok(p, TOK_RBRACE, "Expected '}' ath the end of true branch");
+
+
+    ast_node->expr = if_expr;
+
+    return ast_node;
+}
+
 static ast_node_t *expression(parser_t *p)
 {
     ast_node_t *ast_node = init_ast_node(AST_EXPR);
@@ -207,6 +243,9 @@ static ast_node_t *statement(parser_t *p)
     switch (p->curr.type)
     {
         case TOK_IF:
+        {
+            return parse_if_statement(p);
+        }
         case TOK_RETURN:
         case TOK_LOOP:
         case TOK_LBRACE:
