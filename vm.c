@@ -310,12 +310,12 @@ void vm_run(vm_t *vm)
             }
             case OP_ELSE:
             {
-                printf("OP_ELSE\n");
+                //printf("OP_ELSE\n");
                 break;
             }
             case OP_JUMP_END:
             {
-                printf("OP_JUMP_END\n");
+                //printf("OP_JUMP_END\n");
                 break;
             }
             case OP_EXIT: break;
