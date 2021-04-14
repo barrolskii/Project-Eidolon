@@ -318,6 +318,53 @@ void vm_run(vm_t *vm)
                 //printf("OP_JUMP_END\n");
                 break;
             }
+            case OP_INC:
+            {
+                /* TODO: Make this a function */
+                object_t ident = pop(vm);
+
+                if (!ht_contains_key(vm->globals, ident.as.str))
+                {
+                    printf("Error: variable '%s' not declared\n", ident.as.str);
+                }
+                else
+                {
+                    object_t *val = ht_get_value(vm->globals, ident.as.str);
+
+                    if (val->type == OBJ_VAL_LONG)
+                        val->as.long_num++;
+                    else if (val->type == OBJ_VAL_DOUBLE)
+                        val->as.double_num++;
+
+                    push(vm, *val);
+                    free(ident.as.str); /* TODO: Garbage collector here? */
+                }
+
+                break;
+            }
+            case OP_DEC:
+            {
+                object_t ident = pop(vm);
+
+                if (!ht_contains_key(vm->globals, ident.as.str))
+                {
+                    printf("Error: variable '%s' not declared\n", ident.as.str);
+                }
+                else
+                {
+                    object_t *val = ht_get_value(vm->globals, ident.as.str);
+
+                    if (val->type == OBJ_VAL_LONG)
+                        val->as.long_num--;
+                    else if (val->type == OBJ_VAL_DOUBLE)
+                        val->as.double_num--;
+
+                    push(vm, *val);
+                    free(ident.as.str); /* TODO: Garbage collector here? */
+                }
+
+                break;
+            }
             case OP_EXIT: break;
             default: break;
         }

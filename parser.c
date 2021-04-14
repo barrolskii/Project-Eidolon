@@ -30,6 +30,7 @@ static expr_t *number_double(parser_t *p);
 static expr_t *string(parser_t *p);
 static expr_t *binary_op(parser_t *p);
 static expr_t *group(parser_t *p);
+static expr_t *inc_dec(parser_t *p);
 
 static void parser_advance(parser_t *p)
 {
@@ -75,8 +76,8 @@ static parse_rule_t parse_rules[] = {
     [TOK_BANG]      = { NULL, NULL, OP_PREC_UNARY },
     [TOK_AND]       = { NULL, NULL, OP_PREC_AND },
     [TOK_OR]        = { NULL, NULL, OP_PREC_OR },
-    [TOK_INCREMENT] = { NULL, NULL, OP_PREC_UNARY },
-    [TOK_DECREMENT] = { NULL, NULL, OP_PREC_UNARY },
+    [TOK_INCREMENT] = { NULL, inc_dec, OP_PREC_UNARY },
+    [TOK_DECREMENT] = { NULL, inc_dec, OP_PREC_UNARY },
 
     [TOK_LT]    = { NULL, binary_op, OP_PREC_EQUALITY },
     [TOK_GT]    = { NULL, binary_op, OP_PREC_EQUALITY },
@@ -197,6 +198,13 @@ static expr_t *group(parser_t *p)
     consume_tok(p, TOK_RPAREN, "Expected ')' at the end of grouping expression");
 
     return group;
+}
+
+static expr_t *inc_dec(parser_t *p)
+{
+    expr_t *node = init_expr(p->prev);
+
+    return node;
 }
 
 static ast_node_t *parse_if_statement(parser_t *p)

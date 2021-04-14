@@ -203,6 +203,38 @@ static int compile_expr(compiler_t *c, expr_t *expr)
             emit_byte(c->vm, OP_POP);
             break;
         }
+        case TOK_INCREMENT:
+        {
+            char *ident = malloc(sizeof(char) * expr->left->tok.len + 1);
+            memcpy(ident, expr->left->tok.start, expr->left->tok.len);
+            ident[expr->left->tok.len] = '\0';
+
+            object_t ident_obj = { .type = OBJ_VAL_STR, .as.str = ident };
+
+            add_obj(c->vm, ident_obj);
+
+            emit_byte(c->vm, OP_CONST);
+
+            emit_byte(c->vm, OP_INC);
+            emit_byte(c->vm, OP_POP);
+            break;
+        }
+        case TOK_DECREMENT:
+        {
+            char *ident = malloc(sizeof(char) * expr->left->tok.len + 1);
+            memcpy(ident, expr->left->tok.start, expr->left->tok.len);
+            ident[expr->left->tok.len] = '\0';
+
+            object_t ident_obj = { .type = OBJ_VAL_STR, .as.str = ident };
+
+            add_obj(c->vm, ident_obj);
+
+            emit_byte(c->vm, OP_CONST);
+
+            emit_byte(c->vm, OP_DEC);
+            emit_byte(c->vm, OP_POP);
+            break;
+        }
         default: break;
     }
 
