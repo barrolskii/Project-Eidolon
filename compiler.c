@@ -157,6 +157,24 @@ static int compile_expr(compiler_t *c, expr_t *expr)
 
     switch (expr->tok.type)
     {
+        case TOK_INT:
+        {
+            compile_num(c, expr);
+            emit_byte(c->vm, OP_POP);
+            break;
+        }
+        case TOK_FLOAT:
+        {
+            compile_double(c, expr);
+            emit_byte(c->vm, OP_POP);
+            break;
+        }
+        case TOK_STRING:
+        {
+            compile_string(c, expr);
+            emit_byte(c->vm, OP_POP);
+            break;
+        }
         case TOK_ASSIGN:
         {
             compile_var(c, expr);
@@ -191,6 +209,33 @@ static int compile_expr(compiler_t *c, expr_t *expr)
     return 1;
 }
 
+static void compile_if_stmt(compiler_t *c, expr_t *expr)
+{
+    // Compile expression
+    // Then if operation
+
+    // TODO: I think the left is the expression?
+    compile_expr(c, expr->left);
+    emit_byte(c->vm, OP_IF);
+
+    // TODO: We don't have else support right now. Add this!
+    compile_expr(c, expr->right);
+    emit_byte(c->vm, OP_JUMP_END);
+}
+
+static int compile_stmt(compiler_t *c, expr_t *expr)
+{
+    switch (expr->tok.type)
+    {
+        case TOK_IF:
+            compile_if_stmt(c, expr);
+            break;
+        default: break;
+    }
+
+    return 1;
+}
+
 compiler_t *compiler_init(vm_t *vm)
 {
     compiler_t *c = malloc(sizeof(compiler_t));
@@ -213,8 +258,15 @@ compiler_code_t compiler_compile_program(compiler_t *c, ast_node_t *ast)
 
     while (curr)
     {
+        switch(curr->type)
+        {
+            case AST_STMT:
+                compile_stmt(c, curr->expr);
+                break;
+            default:
+                compile_expr(c, curr->expr);
+        }
         //printf("Curr node: %s\n", token_get_type_literal(curr->expr->tok.type));
-        compile_expr(c, curr->expr);
 
         curr = curr->next;
     }

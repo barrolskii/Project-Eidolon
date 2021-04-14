@@ -27,6 +27,9 @@ typedef enum {
     OP_LT_EQ    = 12,
     OP_EQ       = 13,
     OP_NE       = 14,
+    OP_IF       = 15,
+    OP_ELSE     = 16,
+    OP_JUMP_END = 17,
     OP_EXIT     = 255,
 } op_code;
 

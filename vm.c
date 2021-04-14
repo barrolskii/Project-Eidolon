@@ -286,6 +286,38 @@ void vm_run(vm_t *vm)
                 COMPARE_OBJS(vm, !=);
                 break;
             }
+            case OP_IF:
+            {
+                printf("OP_IF\n");
+
+                // Peek the item on the stack
+                object_t obj = vm->stack[vm->sp];
+
+                //  Check if it's true
+                if (obj.as.str || obj.as.double_num != 0 || obj.as.long_num != 0)
+                {
+                    // If it is then execute the expression
+                }
+                else
+                {
+                    // If not then skip out of the statement
+                    printf("Skipping\n");
+                    while (vm->ip != OP_JUMP_END)
+                        vm->ip++;
+                }
+
+                break;
+            }
+            case OP_ELSE:
+            {
+                printf("OP_ELSE\n");
+                break;
+            }
+            case OP_JUMP_END:
+            {
+                printf("OP_JUMP_END\n");
+                break;
+            }
             case OP_EXIT: break;
             default: break;
         }
