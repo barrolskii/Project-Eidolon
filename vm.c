@@ -288,8 +288,6 @@ void vm_run(vm_t *vm)
             }
             case OP_IF:
             {
-                printf("OP_IF\n");
-
                 // Peek the item on the stack
                 object_t obj = vm->stack[vm->sp];
 
@@ -302,8 +300,8 @@ void vm_run(vm_t *vm)
                 {
                     // If not then skip out of the statement
                     printf("Skipping\n");
-                    while (vm->ip != OP_JUMP_END)
-                        vm->ip++;
+                    while (vm->instructions[i] != OP_JUMP_END)
+                        i++;
                 }
 
                 break;
@@ -362,6 +360,52 @@ void vm_run(vm_t *vm)
                     push(vm, *val);
                     free(ident.as.str); /* TODO: Garbage collector here? */
                 }
+
+                break;
+            }
+            case OP_LOOP:
+            {
+                /* Check the expression on top of the stack */
+                object_t obj = vm->stack[vm->sp - 1];
+
+                static unsigned orig_cp = 0;
+                static unsigned end_cp = 0;
+
+                if (orig_cp == 0)
+                    orig_cp = vm->cp;
+                else
+                    vm->cp = orig_cp;
+
+                if (obj.as.str || obj.as.double_num != 0 || obj.as.long_num != 0)
+                {
+                    // If it is then execute the expression
+                    // Decrement the expression so we can leave the loop
+                    vm->stack[vm->sp - 1].as.long_num--;
+                }
+                else
+                {
+                    // If not then skip out of the statement
+                    printf("Skipping\n");
+                    while (vm->instructions[i] != OP_LOOP_END)
+                        i++;
+
+                    free(vm->constants[orig_cp].as.str);
+                }
+
+                break;
+            }
+            case OP_LOOP_END:
+            {
+                printf("Reached loop end\n");
+
+                while(vm->instructions[i] != OP_LOOP)
+                    i--;
+
+                /*
+                 * Decrement i once more so we move into that instruction
+                 * on the next iteration
+                 */
+                i--;
 
                 break;
             }

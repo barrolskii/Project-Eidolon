@@ -255,12 +255,34 @@ static void compile_if_stmt(compiler_t *c, expr_t *expr)
     emit_byte(c->vm, OP_JUMP_END);
 }
 
+static void compile_loop_stmt(compiler_t *c, expr_t *expr)
+{
+    /* TODO: This will break if any other expressions are put into
+     *       a for loop. FIX THIS!!!
+     */
+    if (expr->left->tok.type == TOK_INT)
+    {
+        object_t num = { .type = OBJ_VAL_LONG, .as.long_num = strtol(expr->left->tok.start, NULL, 10) };
+        add_obj(c->vm, num);
+        emit_byte(c->vm, OP_CONST);
+    }
+
+    //compile_expr(c, expr->left);
+    emit_byte(c->vm, OP_LOOP);
+
+    compile_expr(c, expr->right);
+    emit_byte(c->vm, OP_LOOP_END);
+}
+
 static int compile_stmt(compiler_t *c, expr_t *expr)
 {
     switch (expr->tok.type)
     {
         case TOK_IF:
             compile_if_stmt(c, expr);
+            break;
+        case TOK_LOOP:
+            compile_loop_stmt(c, expr);
             break;
         default: break;
     }

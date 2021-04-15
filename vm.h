@@ -32,6 +32,8 @@ typedef enum {
     OP_JUMP_END = 17,
     OP_INC      = 18,
     OP_DEC      = 19,
+    OP_LOOP     = 20,
+    OP_LOOP_END = 21,
     OP_EXIT     = 255,
 } op_code;
 

@@ -207,7 +207,7 @@ static expr_t *inc_dec(parser_t *p)
     return node;
 }
 
-static ast_node_t *parse_if_statement(parser_t *p)
+static ast_node_t *parse_if_stmt(parser_t *p)
 {
     ast_node_t *ast_node = init_ast_node(AST_STMT);
     expr_t *if_expr = init_expr(p->prev);
@@ -226,12 +226,37 @@ static ast_node_t *parse_if_statement(parser_t *p)
     if_expr->right = parse_precedence(p, OP_PREC_ASSIGN);
     parser_advance(p);
 
-    consume_tok(p, TOK_RBRACE, "Expected '}' ath the end of true branch");
+    consume_tok(p, TOK_RBRACE, "Expected '}' at the end of true branch");
 
 
     ast_node->expr = if_expr;
 
     return ast_node;
+}
+
+static ast_node_t *parse_loop_stmt(parser_t *p)
+{
+    ast_node_t *loop_node = init_ast_node(AST_STMT);
+    expr_t *loop_expr = init_expr(p->curr);
+
+    parser_advance(p);
+    consume_tok(p, TOK_LPAREN, "Expected '(' after loop keyword");
+
+    /* Left node stores the expression */
+    loop_expr->left = parse_precedence(p, OP_PREC_ASSIGN);
+
+    consume_tok(p, TOK_RPAREN, "Expected ')' at the end of expression");
+    consume_tok(p, TOK_LBRACE, "Expected '{' after loop expression");
+
+    loop_expr->right = parse_precedence(p, OP_PREC_ASSIGN);
+    parser_advance(p);
+
+    consume_tok(p, TOK_RBRACE, "Expected '}' at the end of expression");
+
+
+    loop_node->expr = loop_expr;
+
+    return loop_node;
 }
 
 static ast_node_t *expression(parser_t *p)
@@ -252,10 +277,13 @@ static ast_node_t *statement(parser_t *p)
     {
         case TOK_IF:
         {
-            return parse_if_statement(p);
+            return parse_if_stmt(p);
         }
         case TOK_RETURN:
         case TOK_LOOP:
+        {
+            return parse_loop_stmt(p);
+        }
         case TOK_LBRACE:
         {
             printf("Statements not yet implemented\n");
