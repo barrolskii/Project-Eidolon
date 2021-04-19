@@ -31,6 +31,7 @@ static expr_t *string(parser_t *p);
 static expr_t *binary_op(parser_t *p);
 static expr_t *group(parser_t *p);
 static expr_t *inc_dec(parser_t *p);
+static expr_t *stdinput(parser_t *p);
 
 static void parser_advance(parser_t *p)
 {
@@ -107,6 +108,8 @@ static parse_rule_t parse_rules[] = {
     [TOK_CONTINUE] = { NULL, NULL, OP_PREC_NONE },
     [TOK_TRUE]     = { NULL, NULL, OP_PREC_NONE },
     [TOK_FALSE]    = { NULL, NULL, OP_PREC_NONE },
+
+    [TOK_STDIN]    = { stdinput, NULL, OP_PREC_NONE},
 };
 
 static parse_rule_t *get_rule(token_type type)
@@ -207,10 +210,17 @@ static expr_t *inc_dec(parser_t *p)
     return node;
 }
 
+static expr_t *stdinput(parser_t *p)
+{
+    expr_t *node = init_expr(p->prev);
+
+    return node;
+}
+
 static ast_node_t *parse_if_stmt(parser_t *p)
 {
     ast_node_t *ast_node = init_ast_node(AST_STMT);
-    expr_t *if_expr = init_expr(p->prev);
+    expr_t *if_expr = init_expr(p->curr);
 
     parser_advance(p);
     consume_tok(p, TOK_LPAREN, "Expected '(' after if keyword");
@@ -222,12 +232,33 @@ static ast_node_t *parse_if_stmt(parser_t *p)
     consume_tok(p, TOK_LBRACE, "Expected '{' at the start of true branch");
 
 
-    /* TODO: For now just parse the true branch of the if statement */
-    if_expr->right = parse_precedence(p, OP_PREC_ASSIGN);
+    /* Parse the true branch of the if statement */
+    expr_t *true_branch = parse_precedence(p, OP_PREC_ASSIGN);
     parser_advance(p);
 
     consume_tok(p, TOK_RBRACE, "Expected '}' at the end of true branch");
 
+
+    //if_expr->right =
+
+    if (p->curr.type == TOK_ELSE)
+    {
+        expr_t *else_node = init_expr(p->curr);
+
+        parser_advance(p);
+        consume_tok(p, TOK_LBRACE, "Expected '{' after else statement");
+
+        else_node->right = parse_precedence(p, OP_PREC_ASSIGN);
+        else_node->left = true_branch;
+        if_expr->right = else_node;
+
+        parser_advance(p);
+        consume_tok(p, TOK_RBRACE, "Expected '}' at the end of false branch");
+    }
+    else
+    {
+        if_expr->right = true_branch;
+    }
 
     ast_node->expr = if_expr;
 

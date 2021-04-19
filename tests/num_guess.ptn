@@ -1,0 +1,22 @@
+var num = rand_num;
+
+"I'm thinking of a number between 1 and 10";
+"Can you guess it in 3 tries?"
+
+loop(3)
+{
+	var guess = stdin;
+
+	if (guess == num)
+	{
+		"You guessed correctly! Well done!";
+		exit;
+ 	}
+	else
+	{
+		"That's not what I'm thinking. Try again.";
+	}
+}
+
+"Better luck next time";
+

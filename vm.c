@@ -89,7 +89,36 @@ static struct object_node *add_obj(vm_t *vm, object_t obj)
     curr->next->obj = malloc(sizeof(object_t));
     memcpy(curr->next->obj, &obj, sizeof(object_t));
 
+    if (obj.type == OBJ_VAL_STR)
+    {
+        curr->obj->as.str = obj.as.str;
+    }
+
     return curr->next;
+}
+
+static int foo(vm_t *vm, object_t *obj)
+{
+    if (!vm->head)
+    {
+        vm->head = malloc(sizeof(struct object_node));
+        vm->head->next = NULL;
+        vm->head->obj = obj;
+
+        return 1;
+    }
+
+    struct object_node* curr = vm->head;
+    while (curr->next)
+    {
+        curr = curr->next;
+    }
+
+    curr->next = malloc(sizeof(struct object_node));
+    curr->next->next = NULL;
+    curr->next->obj = obj;
+
+    return 1;
 }
 
 static void print_obj_list(vm_t *vm)
@@ -112,7 +141,10 @@ static void free_obj_list(vm_t *vm)
     {
         next = curr->next;
 
-        if (curr->obj->type == OBJ_VAL_STR) free(curr->obj->as.str);
+        if (curr->obj->type == OBJ_VAL_STR && *curr->obj->as.str != NULL)
+        {
+            free(curr->obj->as.str);
+        }
         free(curr->obj);
         free(curr);
 
@@ -209,7 +241,11 @@ void vm_run(vm_t *vm)
                 object_t obj = pop(vm);
                 print_obj(obj);
 
-                //if (obj.type == OBJ_VAL_STR) free(obj.as.str); /* TODO: Possibly use garbage collector here? */
+                if (obj.type == OBJ_VAL_STR)
+                {
+                    free(obj.as.str); /* TODO: Possibly use garbage collector here? */
+                    *obj.as.str = NULL;
+                }
                 break;
             }
             case OP_VAR_DECL:
@@ -219,16 +255,22 @@ void vm_run(vm_t *vm)
 
 
                 /* Add the value of the variable assignment to the object list */
-                struct object_node *obj_val = add_obj(vm, val);
+                //struct object_node *obj_val = add_obj(vm, val);
+                //struct object_node* obj_val = malloc
+
+                object_t *heap_val = malloc(sizeof(object_t));
+                memcpy(heap_val, &val, sizeof(object_t));
+
+                foo(vm, heap_val);
 
                 if (!ht_contains_key(vm->globals, ident.as.str))
                 {
-                    ht_insert(vm->globals, ident.as.str, obj_val->obj);
+                    ht_insert(vm->globals, ident.as.str, heap_val);
                 }
                 else
                 {
                     /* TODO: This might not be needed here. Could be put in a set var operation */
-                    ht_update_key(vm->globals, ident.as.str, obj_val->obj);
+                    ht_update_key(vm->globals, ident.as.str, heap_val);
                 }
 
                 break;
@@ -240,6 +282,7 @@ void vm_run(vm_t *vm)
                 if (!ht_contains_key(vm->globals, ident.as.str))
                 {
                     printf("Error: variable '%s' not declared\n", ident.as.str);
+                    free(ident.as.str);
 
                     /* TODO: For now skip the next pop operation but in future return a
                      * runtime error and exit gracefully
@@ -300,15 +343,25 @@ void vm_run(vm_t *vm)
                 {
                     // If not then skip out of the statement
                     printf("Skipping\n");
-                    while (vm->instructions[i] != OP_JUMP_END)
+                    while (1)
+                    {
+                        if (vm->instructions[i + 1] == OP_CONST) vm->cp++;
+
+                        if (vm->instructions[i + 1] == OP_JUMP_END ||
+                            vm->instructions[i + 1] == OP_ELSE)
+                        {
+                            break;
+                        }
+
                         i++;
+                    }
                 }
 
                 break;
             }
             case OP_ELSE:
             {
-                //printf("OP_ELSE\n");
+                printf("OP_ELSE\n");
                 break;
             }
             case OP_JUMP_END:
@@ -406,6 +459,34 @@ void vm_run(vm_t *vm)
                  * on the next iteration
                  */
                 i--;
+
+                break;
+            }
+            case OP_STDIN:
+            {
+                object_t obj;
+                char buffer[1024] = {0};
+
+                scanf(" %1024s", buffer);
+
+                long str_long = atol(buffer);
+
+                if (str_long != 0)
+                {
+                    obj.as.long_num = str_long;
+                    obj.type = OBJ_VAL_LONG;
+                }
+                else
+                {
+                    obj.as.str = malloc(strlen(buffer) + 1);
+                    strcpy(obj.as.str, buffer);
+
+
+                    obj.type = OBJ_VAL_STR;
+                }
+
+
+                push(vm, obj);
 
                 break;
             }

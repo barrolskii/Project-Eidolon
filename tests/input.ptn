@@ -1,0 +1,4 @@
+var message = "Please enter your name";
+
+message;
+var name = stdin;

@@ -147,7 +147,11 @@ int main(int argc, char **argv)
     compiler_t *c = compiler_init(vm);
 
     ast_node_t *ast = parser_parse_program(p);
-    //if (!ast) printf("No ast supplied\n");
+    if (!ast)
+    {
+        printf("No ast supplied\n");
+        goto cleanup;
+    }
     
     compiler_code_t code = compiler_compile_program(c, ast);
     //if (code == COMPILER_OK) printf("Successful compilation!\n");
@@ -157,6 +161,7 @@ int main(int argc, char **argv)
     //ast_node_print_header();
     //ast_node_print_node(ast);
 
+cleanup:
     // TODO: Rename this to reflect that it recursively frees
     ast_node_free(ast);
 

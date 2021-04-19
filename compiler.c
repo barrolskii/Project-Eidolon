@@ -63,6 +63,11 @@ static void compile_ident(compiler_t *c, expr_t *expr)
     emit_byte(c->vm, OP_VAR_GET);
 }
 
+static void compile_stdin(compiler_t *c, expr_t *expr)
+{
+    emit_byte(c->vm, OP_STDIN);
+}
+
 static void compile_bin_expr(compiler_t *c, expr_t *expr)
 {
     if (expr->left) compile_bin_expr(c, expr->left);
@@ -128,6 +133,11 @@ static void compile_var(compiler_t *c, expr_t *expr)
             compile_ident(c, expr->right);
             //emit_byte(c->vm, OP_VAR_GET);
             break;
+        case TOK_STDIN:
+        {
+            compile_stdin(c, expr->right);
+            break;
+        }
 
         default:
            break;
@@ -235,6 +245,11 @@ static int compile_expr(compiler_t *c, expr_t *expr)
             emit_byte(c->vm, OP_POP);
             break;
         }
+        case TOK_STDIN:
+        {
+            compile_stdin(c, expr);
+            break;
+        }
         default: break;
     }
 
@@ -243,15 +258,24 @@ static int compile_expr(compiler_t *c, expr_t *expr)
 
 static void compile_if_stmt(compiler_t *c, expr_t *expr)
 {
-    // Compile expression
-    // Then if operation
-
-    // TODO: I think the left is the expression?
+    /* The left node contains the expression */
     compile_expr(c, expr->left);
     emit_byte(c->vm, OP_IF);
 
-    // TODO: We don't have else support right now. Add this!
-    compile_expr(c, expr->right);
+    /* Check if the current if statement is an if else */
+    if (expr->right->tok.type == TOK_ELSE)
+    {
+        /* Left is true and right is false */
+        compile_expr(c, expr->right->left);
+        emit_byte(c->vm, OP_ELSE);
+        compile_expr(c, expr->right->right);
+    }
+    else
+    {
+        /* Just compile the right node if no else statement was found */
+        compile_expr(c, expr->right);
+    }
+
     emit_byte(c->vm, OP_JUMP_END);
 }
 
