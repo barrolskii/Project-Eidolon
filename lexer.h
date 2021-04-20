@@ -59,6 +59,7 @@ typedef enum {
     TOK_FALSE,
 
     TOK_STDIN,
+    TOK_EXIT,
 } token_type;
 
 typedef struct {

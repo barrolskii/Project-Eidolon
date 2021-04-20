@@ -95,7 +95,12 @@ static token_type check_keyword(const char *start)
     {
         case 'b': if (memcmp(start, "break", 5) == 0) return TOK_BREAK; break;
         case 'c': if (memcmp(start, "continue", 8) == 0) return TOK_CONTINUE; break;
-        case 'e': if (memcmp(start, "else", 4) == 0) return TOK_ELSE; break;
+        case 'e':
+        {
+            if (memcmp(start, "else", 4) == 0) return TOK_ELSE;
+            if (memcmp(start, "exit", 4) == 0) return TOK_EXIT;
+            break;
+        }
         case 'f':
         {
             if (memcmp(start, "false", 5) == 0) return TOK_FALSE;
@@ -273,6 +278,7 @@ const char *token_get_type_literal(token_type type)
         case TOK_FALSE: return "FALSE";
 
         case TOK_STDIN: return "STDIN";
+        case TOK_EXIT: return "EXIT";
         default: return "ILLEGAL";
     }
 }

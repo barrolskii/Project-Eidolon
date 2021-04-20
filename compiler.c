@@ -250,6 +250,10 @@ static int compile_expr(compiler_t *c, expr_t *expr)
             compile_stdin(c, expr);
             break;
         }
+        case TOK_EXIT:
+        {
+            emit_byte(c->vm, OP_EXIT);
+        }
         default: break;
     }
 

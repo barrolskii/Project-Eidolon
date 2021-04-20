@@ -485,7 +485,7 @@ void vm_run(vm_t *vm)
 
                 break;
             }
-            case OP_EXIT: break;
+            case OP_EXIT: return;
             default: break;
         }
     }
