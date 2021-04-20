@@ -97,7 +97,7 @@ static struct object_node *add_obj(vm_t *vm, object_t obj)
     return curr->next;
 }
 
-static int foo(vm_t *vm, object_t *obj)
+static int add_obj_ptr(vm_t *vm, object_t *obj)
 {
     if (!vm->head)
     {
@@ -253,15 +253,10 @@ void vm_run(vm_t *vm)
                 object_t val = pop(vm);
                 object_t ident = pop(vm);
 
-
-                /* Add the value of the variable assignment to the object list */
-                //struct object_node *obj_val = add_obj(vm, val);
-                //struct object_node* obj_val = malloc
-
                 object_t *heap_val = malloc(sizeof(object_t));
                 memcpy(heap_val, &val, sizeof(object_t));
 
-                foo(vm, heap_val);
+                add_obj_ptr(vm, heap_val);
 
                 if (!ht_contains_key(vm->globals, ident.as.str))
                 {
