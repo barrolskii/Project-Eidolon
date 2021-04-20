@@ -1,4 +1,6 @@
 "Hello, World!";
+
+# This is a comment
 exit;
 
 "This is unreachable";

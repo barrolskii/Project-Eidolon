@@ -68,6 +68,14 @@ static void compile_stdin(compiler_t *c, expr_t *expr)
     emit_byte(c->vm, OP_STDIN);
 }
 
+static void compile_rand(compiler_t *c, expr_t *expr)
+{
+    /* Compile the rand number range */
+    compile_num(c, expr->right);
+
+    emit_byte(c->vm, OP_RAND);
+}
+
 static void compile_bin_expr(compiler_t *c, expr_t *expr)
 {
     if (expr->left) compile_bin_expr(c, expr->left);
@@ -136,6 +144,11 @@ static void compile_var(compiler_t *c, expr_t *expr)
         case TOK_STDIN:
         {
             compile_stdin(c, expr->right);
+            break;
+        }
+        case TOK_RAND:
+        {
+            compile_rand(c, expr->right);
             break;
         }
 

@@ -141,6 +141,8 @@ int main(int argc, char **argv)
 
     char *input = read_file(argv[1]);
 
+    srand(time(NULL));
+
     lexer_t *l = lexer_init(input);
     parser_t *p = parser_init(l);
     vm_t *vm = vm_init();

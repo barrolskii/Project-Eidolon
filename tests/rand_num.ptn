@@ -1,0 +1,3 @@
+var foo = rand(10);
+
+foo;

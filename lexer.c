@@ -109,7 +109,12 @@ static token_type check_keyword(const char *start)
         }
         case 'i': if (memcmp(start, "if", 2) == 0) return TOK_IF; break;
         case 'l': if (memcmp(start, "loop", 4) == 0) return TOK_LOOP; break;
-        case 'r': if (memcmp(start, "return", 6) == 0) return TOK_RETURN; break;
+        case 'r':
+        {
+            if (memcmp(start, "return", 6) == 0) return TOK_RETURN;
+            if (memcmp(start, "rand", 4) == 0) return TOK_RAND;
+            break;
+        }
         case 's': if (memcmp(start, "stdin", 5) == 0) return TOK_STDIN; break;
         case 't': if (memcmp(start, "true", 4) == 0) return TOK_TRUE; break;
         case 'v': if (memcmp(start, "var", 3) == 0) return TOK_VAR; break;
@@ -279,6 +284,7 @@ const char *token_get_type_literal(token_type type)
 
         case TOK_STDIN: return "STDIN";
         case TOK_EXIT: return "EXIT";
+        case TOK_RAND: return "RAND";
         default: return "ILLEGAL";
     }
 }

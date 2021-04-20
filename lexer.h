@@ -60,6 +60,7 @@ typedef enum {
 
     TOK_STDIN,
     TOK_EXIT,
+    TOK_RAND,
 } token_type;
 
 typedef struct {

@@ -485,6 +485,15 @@ void vm_run(vm_t *vm)
 
                 break;
             }
+            case OP_RAND:
+            {
+                object_t range = pop(vm);
+                object_t val = { .as.long_num = rand() % range.as.long_num, .type = OBJ_VAL_LONG };
+
+                push(vm, val);
+
+                break;
+            }
             case OP_EXIT: return;
             default: break;
         }

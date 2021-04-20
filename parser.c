@@ -33,6 +33,7 @@ static expr_t *group(parser_t *p);
 static expr_t *inc_dec(parser_t *p);
 static expr_t *stdinput(parser_t *p);
 static expr_t *exit_script(parser_t *p);
+static expr_t *rand_num(parser_t *p);
 
 static void parser_advance(parser_t *p)
 {
@@ -112,6 +113,7 @@ static parse_rule_t parse_rules[] = {
 
     [TOK_STDIN]    = { stdinput, NULL, OP_PREC_NONE},
     [TOK_EXIT]     = { exit_script, NULL, OP_PREC_NONE },
+    [TOK_RAND]     = { rand_num, NULL, OP_PREC_NONE },
 };
 
 static parse_rule_t *get_rule(token_type type)
@@ -222,6 +224,20 @@ static expr_t *stdinput(parser_t *p)
 static expr_t *exit_script(parser_t *p)
 {
     expr_t *node = init_expr(p->prev);
+
+    return node;
+}
+
+static expr_t *rand_num(parser_t *p)
+{
+    expr_t *node = init_expr(p->prev);
+
+    consume_tok(p, TOK_LPAREN, "Expected '(' after rand keyword");
+
+    parser_advance(p);
+    node->right = init_expr(p->prev);
+
+    consume_tok(p, TOK_RPAREN, "Expected ')' after rand keyword");
 
     return node;
 }

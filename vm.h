@@ -35,6 +35,7 @@ typedef enum {
     OP_LOOP     = 20,
     OP_LOOP_END = 21,
     OP_STDIN    = 22,
+    OP_RAND     = 23,
     OP_EXIT     = 255,
 } op_code;
 
