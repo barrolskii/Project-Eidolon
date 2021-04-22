@@ -436,7 +436,8 @@ void vm_run(vm_t *vm)
                     while (vm->instructions[i] != OP_LOOP_END)
                         i++;
 
-                    free(vm->constants[orig_cp].as.str);
+                    if (vm->constants[orig_cp].type == OBJ_VAL_STR)
+                        free(vm->constants[orig_cp].as.str);
                 }
 
                 break;

@@ -2,5 +2,5 @@ var foo = "Hello";
 
 loop(10)
 {
-	"Hello";
+	 3;
 }
