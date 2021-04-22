@@ -241,11 +241,6 @@ void vm_run(vm_t *vm)
                 object_t obj = pop(vm);
                 print_obj(obj);
 
-                if (obj.type == OBJ_VAL_STR)
-                {
-                    free(obj.as.str); /* TODO: Possibly use garbage collector here? */
-                    *obj.as.str = NULL;
-                }
                 break;
             }
             case OP_VAR_DECL:
@@ -345,6 +340,7 @@ void vm_run(vm_t *vm)
                         if (vm->instructions[i + 1] == OP_JUMP_END ||
                             vm->instructions[i + 1] == OP_ELSE)
                         {
+                            i++;
                             break;
                         }
 
@@ -357,6 +353,10 @@ void vm_run(vm_t *vm)
             case OP_ELSE:
             {
                 printf("OP_ELSE\n");
+
+                while (vm->instructions[i] != OP_JUMP_END)
+                    i++;
+
                 break;
             }
             case OP_JUMP_END:
@@ -433,7 +433,6 @@ void vm_run(vm_t *vm)
                 else
                 {
                     // If not then skip out of the statement
-                    printf("Skipping\n");
                     while (vm->instructions[i] != OP_LOOP_END)
                         i++;
 
@@ -444,8 +443,6 @@ void vm_run(vm_t *vm)
             }
             case OP_LOOP_END:
             {
-                printf("Reached loop end\n");
-
                 while(vm->instructions[i] != OP_LOOP)
                     i--;
 

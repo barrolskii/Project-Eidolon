@@ -2,6 +2,10 @@ var foo = 3;
 
 if (0) {
 	"This is the true branch";
+	"This will execute if true";
+	"More";
 } else {
 	"This is the false branch";
+	"This will execute if false";
+	"Even more";
 }

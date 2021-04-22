@@ -57,6 +57,11 @@ static void consume_tok(parser_t *p, token_type type, char *err_msg)
     parser_err(p, err_msg);
 }
 
+static int peek_tok(parser_t *p, token_type type)
+{
+    return (p->curr.type == type ? 1 : 0);
+}
+
 static parse_rule_t parse_rules[] = {
     /*              prefix  infix  operator precedence */
 
@@ -261,6 +266,16 @@ static ast_node_t *parse_if_stmt(parser_t *p)
     expr_t *true_branch = parse_precedence(p, OP_PREC_ASSIGN);
     parser_advance(p);
 
+    expr_t *next_expr = true_branch;
+
+    /* Append extra expressions if they are contained in the branch */
+    while (!peek_tok(p, TOK_RBRACE))
+    {
+        next_expr->left = parse_precedence(p, OP_PREC_ASSIGN);
+        next_expr = next_expr->left;
+        parser_advance(p);
+    }
+
     consume_tok(p, TOK_RBRACE, "Expected '}' at the end of true branch");
 
 
@@ -272,10 +287,24 @@ static ast_node_t *parse_if_stmt(parser_t *p)
         consume_tok(p, TOK_LBRACE, "Expected '{' after else statement");
 
         else_node->right = parse_precedence(p, OP_PREC_ASSIGN);
+        next_expr = else_node->right;
+
+        parser_advance(p);
+
+        /* Append extra expressions if they are contained within the false branch */
+        while (!peek_tok(p, TOK_RBRACE))
+        {
+            next_expr->left = parse_precedence(p, OP_PREC_ASSIGN);
+            next_expr = next_expr->left;
+            parser_advance(p);
+        }
+
+
         else_node->left = true_branch;
         if_expr->right = else_node;
 
-        parser_advance(p);
+
+        //parser_advance(p);
         consume_tok(p, TOK_RBRACE, "Expected '}' at the end of false branch");
     }
     else

@@ -282,15 +282,32 @@ static void compile_if_stmt(compiler_t *c, expr_t *expr)
     /* Check if the current if statement is an if else */
     if (expr->right->tok.type == TOK_ELSE)
     {
-        /* Left is true and right is false */
-        compile_expr(c, expr->right->left);
+        expr_t *next_expr = expr->right->left;
+        while (next_expr)
+        {
+            /* Left is true and right is false */
+            compile_expr(c, next_expr);
+            next_expr = next_expr->left;
+        }
+
         emit_byte(c->vm, OP_ELSE);
-        compile_expr(c, expr->right->right);
+
+        next_expr = expr->right->right;
+        while (next_expr)
+        {
+            compile_expr(c, next_expr);
+            next_expr = next_expr->left;
+        }
     }
     else
     {
-        /* Just compile the right node if no else statement was found */
-        compile_expr(c, expr->right);
+        expr_t *next_expr = expr->right;
+        while (next_expr)
+        {
+            /* Just compile the right node if no else statement was found */
+            compile_expr(c, next_expr);
+            next_expr = next_expr->left;
+        }
     }
 
     emit_byte(c->vm, OP_JUMP_END);
