@@ -346,6 +346,25 @@ static void compile_loop_stmt(compiler_t *c, expr_t *expr)
     emit_byte(c->vm, OP_LOOP);
 
     compile_expr(c, expr->right);
+
+    /* Compile any other expressions that are in the statement */
+    expr_t *next_expr = NULL;
+
+    if (expr->right->tok.type == TOK_ASSIGN)
+    {
+        next_expr = expr->right->left;
+    }
+    else
+    {
+        next_expr = expr->right;
+    }
+
+    while (next_expr->left)
+    {
+        compile_expr(c, next_expr->left);
+        next_expr = next_expr->left;
+    }
+    
     emit_byte(c->vm, OP_LOOP_END);
 }
 

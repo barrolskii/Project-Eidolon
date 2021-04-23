@@ -422,7 +422,12 @@ void vm_run(vm_t *vm)
                 if (orig_cp == 0)
                     orig_cp = vm->cp;
                 else
+                {
+                    if (end_cp == 0)
+                        end_cp = vm->cp;
+
                     vm->cp = orig_cp;
+                }
 
                 if (obj.as.str || obj.as.double_num != 0 || obj.as.long_num != 0)
                 {
@@ -436,7 +441,8 @@ void vm_run(vm_t *vm)
                     while (vm->instructions[i] != OP_LOOP_END)
                         i++;
 
-                    vm->cp = orig_cp + 1;
+                    //vm->cp = orig_cp + 1;
+                    vm->cp = end_cp;
 
                     // TODO: Make constants cleanup function!!!
                     //if (vm->constants[orig_cp].type == OBJ_VAL_STR)
