@@ -86,6 +86,7 @@ static void compile_bin_expr(compiler_t *c, expr_t *expr)
         case TOK_INT: compile_num(c, expr); break;
         case TOK_FLOAT: compile_double(c, expr); break;
         case TOK_STRING: compile_string(c, expr); break;
+        case TOK_IDENT: compile_ident(c, expr); break;
 
         case TOK_PLUS: emit_byte(c->vm, OP_ADD); break;
         case TOK_MINUS: emit_byte(c->vm, OP_SUB); break;
@@ -315,14 +316,30 @@ static void compile_if_stmt(compiler_t *c, expr_t *expr)
 
 static void compile_loop_stmt(compiler_t *c, expr_t *expr)
 {
-    /* TODO: This will break if any other expressions are put into
-     *       a for loop. FIX THIS!!!
-     */
-    if (expr->left->tok.type == TOK_INT)
+
+    switch (expr->left->tok.type)
     {
-        object_t num = { .type = OBJ_VAL_LONG, .as.long_num = strtol(expr->left->tok.start, NULL, 10) };
-        add_obj(c->vm, num);
-        emit_byte(c->vm, OP_CONST);
+        case TOK_INT:
+        {
+            compile_num(c, expr->left);
+            break;
+        }
+        case TOK_IDENT:
+        {
+            compile_ident(c, expr->left);
+            break;
+        }
+        case TOK_EQ:
+        case TOK_NE:
+        case TOK_LT:
+        case TOK_LT_EQ:
+        case TOK_GT:
+        case TOK_GT_EQ:
+        {
+            compile_bin_expr(c, expr->left);
+            break;
+        }
+        default: break;
     }
 
     //compile_expr(c, expr->left);

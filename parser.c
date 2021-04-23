@@ -35,6 +35,10 @@ static expr_t *stdinput(parser_t *p);
 static expr_t *exit_script(parser_t *p);
 static expr_t *rand_num(parser_t *p);
 
+/* Functions for statements nested within statements */
+static expr_t *nested_if(parser_t *p);
+static expr_t *nested_var(parser_t *p);
+
 static void parser_advance(parser_t *p)
 {
     p->prev = p->curr;
@@ -105,8 +109,8 @@ static parse_rule_t parse_rules[] = {
     [TOK_LBRACKET] = { NULL, NULL, OP_PREC_NONE },
     [TOK_RBRACKET] = { NULL, NULL, OP_PREC_NONE },
 
-    [TOK_VAR]      = { NULL, NULL, OP_PREC_NONE },
-    [TOK_IF]       = { NULL, NULL, OP_PREC_NONE },
+    [TOK_VAR]      = { nested_var, NULL, OP_PREC_NONE },
+    [TOK_IF]       = { nested_if, NULL, OP_PREC_NONE },
     [TOK_ELSE]     = { NULL, NULL, OP_PREC_NONE },
     [TOK_LOOP]     = { NULL, NULL, OP_PREC_NONE },
     [TOK_FUNC]     = { NULL, NULL, OP_PREC_NONE },
@@ -247,6 +251,86 @@ static expr_t *rand_num(parser_t *p)
     return node;
 }
 
+static expr_t *nested_if(parser_t *p)
+{
+    expr_t *if_expr = init_expr(p->prev);
+
+    consume_tok(p, TOK_LPAREN, "Expected '(' after if keyword");
+
+
+    /* Like parsing the statement, the left node contains the expression */
+    if_expr->left = parse_precedence(p, OP_PREC_ASSIGN);
+
+    consume_tok(p, TOK_RPAREN, "Expected ')' at the end of expression");
+    consume_tok(p, TOK_LBRACE, "Expected '{' at the start of true branch");
+
+    expr_t *true_branch = parse_precedence(p, OP_PREC_ASSIGN);
+    parser_advance(p);
+
+    expr_t *next_expr = true_branch;
+
+     while (!peek_tok(p, TOK_RBRACE))
+    {
+        next_expr->left = parse_precedence(p, OP_PREC_ASSIGN);
+        next_expr = next_expr->left;
+        parser_advance(p);
+    }
+
+    consume_tok(p, TOK_RBRACE, "Expected '}' at the end of true branch");
+
+
+    if (p->curr.type == TOK_ELSE)
+    {
+        expr_t *else_node = init_expr(p->curr);
+
+        parser_advance(p);
+        consume_tok(p, TOK_LBRACE, "Expected '{' after else statement");
+
+        else_node->right = parse_precedence(p, OP_PREC_ASSIGN);
+        next_expr = else_node->right;
+
+        parser_advance(p);
+
+        /* Append extra expressions if they are contained within the false branch */
+        while (!peek_tok(p, TOK_RBRACE))
+        {
+            next_expr->left = parse_precedence(p, OP_PREC_ASSIGN);
+            next_expr = next_expr->left;
+            parser_advance(p);
+        }
+
+
+        else_node->left = true_branch;
+        if_expr->right = else_node;
+
+
+        //parser_advance(p);
+        consume_tok(p, TOK_RBRACE, "Expected '}' at the end of false branch");
+    }
+    else
+    {
+        if_expr->right = true_branch;
+    }
+
+    return if_expr;
+}
+
+static expr_t *nested_var(parser_t *p)
+{
+    consume_tok(p, TOK_IDENT, "Expected variable definition");
+
+    expr_t *var= init_expr(p->curr); /* Assignment token '=' */
+    var->left = init_expr(p->prev); /* The ident token */
+
+    parser_advance(p);
+
+    var->right = parse_precedence(p, OP_PREC_ASSIGN);
+
+    consume_tok(p, TOK_SEMICOLON, "Expected ';' at the end of expression");
+
+    return var;
+}
+
 static ast_node_t *parse_if_stmt(parser_t *p)
 {
     ast_node_t *ast_node = init_ast_node(AST_STMT);
@@ -273,7 +357,6 @@ static ast_node_t *parse_if_stmt(parser_t *p)
     {
         next_expr->left = parse_precedence(p, OP_PREC_ASSIGN);
         next_expr = next_expr->left;
-        parser_advance(p);
     }
 
     consume_tok(p, TOK_RBRACE, "Expected '}' at the end of true branch");
@@ -332,7 +415,24 @@ static ast_node_t *parse_loop_stmt(parser_t *p)
     consume_tok(p, TOK_LBRACE, "Expected '{' after loop expression");
 
     loop_expr->right = parse_precedence(p, OP_PREC_ASSIGN);
-    parser_advance(p);
+
+    expr_t *next_expr = NULL;
+
+    /* Check if there is a variable assignement otherwise the tree will break */
+    if (loop_expr->right->tok.type == TOK_ASSIGN)
+    {
+        next_expr = loop_expr->right->left;
+    }
+    else
+    {
+        next_expr = loop_expr->right;
+    }
+
+    while(!peek_tok(p, TOK_RBRACE))
+    {
+        next_expr->left = parse_precedence(p, OP_PREC_ASSIGN);
+        next_expr = next_expr->left;
+    }
 
     consume_tok(p, TOK_RBRACE, "Expected '}' at the end of expression");
 

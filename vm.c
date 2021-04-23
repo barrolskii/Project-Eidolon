@@ -324,29 +324,29 @@ void vm_run(vm_t *vm)
                 // Peek the item on the stack
                 object_t obj = vm->stack[vm->sp];
 
-                //  Check if it's true
-                if (obj.as.str || obj.as.double_num != 0 || obj.as.long_num != 0)
+                if (obj.type == OBJ_VAL_BOOL && strcmp(obj.as.str, "true") == 0)
+                    break;
+
+                if (obj.type != OBJ_VAL_BOOL && (obj.as.str || obj.as.double_num != 0 || obj.as.long_num != 0))
+                    break;
+
+
+                // If not then skip out of the statement
+                printf("Skipping\n");
+                while (1)
                 {
-                    // If it is then execute the expression
-                }
-                else
-                {
-                    // If not then skip out of the statement
-                    printf("Skipping\n");
-                    while (1)
+                    if (vm->instructions[i + 1] == OP_CONST) vm->cp++;
+
+                    if (vm->instructions[i + 1] == OP_JUMP_END ||
+                        vm->instructions[i + 1] == OP_ELSE)
                     {
-                        if (vm->instructions[i + 1] == OP_CONST) vm->cp++;
-
-                        if (vm->instructions[i + 1] == OP_JUMP_END ||
-                            vm->instructions[i + 1] == OP_ELSE)
-                        {
-                            i++;
-                            break;
-                        }
-
                         i++;
+                        break;
                     }
+
+                    i++;
                 }
+                
 
                 break;
             }
@@ -436,8 +436,11 @@ void vm_run(vm_t *vm)
                     while (vm->instructions[i] != OP_LOOP_END)
                         i++;
 
-                    if (vm->constants[orig_cp].type == OBJ_VAL_STR)
-                        free(vm->constants[orig_cp].as.str);
+                    vm->cp = orig_cp + 1;
+
+                    // TODO: Make constants cleanup function!!!
+                    //if (vm->constants[orig_cp].type == OBJ_VAL_STR)
+                        //free(vm->constants[orig_cp].as.str);
                 }
 
                 break;

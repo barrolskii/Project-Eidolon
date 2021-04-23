@@ -1,6 +1,8 @@
-var foo = "Hello";
+var foo = stdin;
 
-loop(10)
+loop(2)
 {
-	 3;
+	 2;
 }
+
+"Hello";
