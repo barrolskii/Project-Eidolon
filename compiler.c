@@ -174,6 +174,9 @@ static void compile_var_get(compiler_t *c, expr_t *expr)
     emit_byte(c->vm, OP_VAR_GET);
 }
 
+/* Forward declaration as compile_expr and compile_if_stmt have a circular dependency */
+static void compile_if_stmt(compiler_t* c, expr_t* expr);
+
 static int compile_expr(compiler_t *c, expr_t *expr)
 {
     /* Empty expression */
@@ -225,6 +228,11 @@ static int compile_expr(compiler_t *c, expr_t *expr)
         {
             compile_bin_expr(c, expr);
             emit_byte(c->vm, OP_POP);
+            break;
+        }
+        case TOK_IF:
+        {
+            compile_if_stmt(c, expr);
             break;
         }
         case TOK_INCREMENT:
@@ -350,7 +358,7 @@ static void compile_loop_stmt(compiler_t *c, expr_t *expr)
     /* Compile any other expressions that are in the statement */
     expr_t *next_expr = NULL;
 
-    if (expr->right->tok.type == TOK_ASSIGN)
+    if (expr->right->tok.type == TOK_ASSIGN )
     {
         next_expr = expr->right->left;
     }

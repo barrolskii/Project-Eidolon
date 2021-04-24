@@ -1,21 +1,19 @@
 var num = rand(10);
+num;
 
 "I'm thinking of a number between 1 and 10";
 "Can you guess it in 3 tries?";
 
-loop(1)
+loop(3)
 {
-
 	var guess = stdin;
-	guess;
 
-	#if (guess == num) {
-	#	"You guessed correctly! Well done!";
-	#	exit;
-	#}
- 	#} else {
-	#	"That's not what I'm thinking. Try again.";
-	#}
+	if (guess == num) {
+		"You guessed correctly! Well done!";
+		exit;
+ 	} else {
+		"That's not what I'm thinking. Try again.";
+	}
 
 }
 

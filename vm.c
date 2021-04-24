@@ -284,7 +284,7 @@ void vm_run(vm_t *vm)
                     object_t *val = ht_get_value(vm->globals, ident.as.str);
                     push(vm, *val);
                     //print_obj(*val);
-                    free(ident.as.str); /* TODO: Garbage collector here? */
+                    //free(ident.as.str); /* TODO: Garbage collector here? */
                 }
                 break;
             }
@@ -327,8 +327,18 @@ void vm_run(vm_t *vm)
                 if (obj.type == OBJ_VAL_BOOL && strcmp(obj.as.str, "true") == 0)
                     break;
 
-                if (obj.type != OBJ_VAL_BOOL && (obj.as.str || obj.as.double_num != 0 || obj.as.long_num != 0))
+                /* TODO: Make this a bit cleaner but for now it just works */
+                if (obj.type == OBJ_VAL_LONG && obj.as.long_num != 0) 
                     break;
+
+                if (obj.type == OBJ_VAL_DOUBLE && obj.as.double_num != 0)
+                    break;
+
+                if (obj.type == OBJ_VAL_STR && obj.as.str)
+                    break;
+
+                //if (obj.type != OBJ_VAL_BOOL && (obj.as.str || obj.as.long_num != 0 || obj.as.double_num != 0))
+                    //break;
 
 
                 // If not then skip out of the statement
@@ -473,7 +483,7 @@ void vm_run(vm_t *vm)
 
                 long str_long = atol(buffer);
 
-                if (str_long != 0)
+                if (buffer[0] == '0' || str_long != 0)
                 {
                     obj.as.long_num = str_long;
                     obj.type = OBJ_VAL_LONG;

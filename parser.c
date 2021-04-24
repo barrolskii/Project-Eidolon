@@ -433,7 +433,9 @@ static ast_node_t *parse_loop_stmt(parser_t *p)
     {
         next_expr->left = parse_precedence(p, OP_PREC_ASSIGN);
         next_expr = next_expr->left;
-        parser_advance(p);
+
+        if (!peek_tok(p, TOK_RBRACE))
+            parser_advance(p);
     }
 
     consume_tok(p, TOK_RBRACE, "Expected '}' at the end of expression");
