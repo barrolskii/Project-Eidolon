@@ -14,7 +14,7 @@ syntax match phantomNumber "\v<\d+\.\d+>"
 
 " Match strings
 syntax region phantomString start=/"/ skip=/\\"/ end=/"/ oneline contains=phantomInterpolatedWrapper
-syntax region phantomInterpolatedWrapper start="\v\\\(\s*" end="\v\s*)" contained containedin=phantomString contains=phantomInterpolatedString
+syntax region phantomInterpolatedWrapper start="\v\\\(\s*" end="\v\s*\)" contained containedin=phantomString contains=phantomInterpolatedString
 syntax match phantomInterpolatedString "\v\w+(\(\))?" contained containedin=phantomInterpolatedWrapper
 
 " Set highlights

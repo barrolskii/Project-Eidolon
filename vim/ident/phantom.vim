@@ -1,4 +1,4 @@
-setlocal identexpr=PhantomIdent()
+setlocal indentexpr=PhantomIdent()
 
 function! PhantomIdent()
 	let line = getline(v:lnum)
