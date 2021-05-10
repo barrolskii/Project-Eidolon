@@ -322,7 +322,8 @@ void vm_run(vm_t *vm)
             case OP_IF:
             {
                 // Peek the item on the stack
-                object_t obj = vm->stack[vm->sp];
+                //object_t obj = vm->stack[vm->sp];
+                object_t obj = pop(vm);
 
                 if (obj.type == OBJ_VAL_BOOL && strcmp(obj.as.str, "true") == 0)
                     break;
@@ -342,7 +343,6 @@ void vm_run(vm_t *vm)
 
 
                 // If not then skip out of the statement
-                printf("Skipping\n");
                 while (1)
                 {
                     if (vm->instructions[i + 1] == OP_CONST) vm->cp++;
@@ -362,8 +362,6 @@ void vm_run(vm_t *vm)
             }
             case OP_ELSE:
             {
-                printf("OP_ELSE\n");
-
                 while (vm->instructions[i] != OP_JUMP_END)
                     i++;
 

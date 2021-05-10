@@ -286,6 +286,10 @@ static void compile_if_stmt(compiler_t *c, expr_t *expr)
 {
     /* The left node contains the expression */
     compile_expr(c, expr->left);
+
+    /* Remove the pop operation. We don't want that printing with if statement expressions */
+    c->vm->ip--;
+
     emit_byte(c->vm, OP_IF);
 
     /* Check if the current if statement is an if else */
@@ -350,6 +354,9 @@ static void compile_loop_stmt(compiler_t *c, expr_t *expr)
         default: break;
     }
 
+    /* Ignore the pop operation after compiling the expression */
+    //c->vm->cp--;
+
     //compile_expr(c, expr->left);
     emit_byte(c->vm, OP_LOOP);
 
@@ -369,6 +376,13 @@ static void compile_loop_stmt(compiler_t *c, expr_t *expr)
 
     while (next_expr->left)
     {
+        /* This skips an issue when if statement expressions are compiled twice */
+        if (next_expr->tok.type == TOK_IF)
+        {
+            next_expr = next_expr->left->left;
+            continue;
+        }
+
         compile_expr(c, next_expr->left);
         next_expr = next_expr->left;
     }
