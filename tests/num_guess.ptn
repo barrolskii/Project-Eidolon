@@ -1,5 +1,5 @@
 var num = rand(10);
-num;
+#num;
 
 "I'm thinking of a number between 1 and 10";
 "Can you guess it in 3 tries?";
@@ -14,7 +14,6 @@ loop(3)
  	} else {
 		"That's not what I'm thinking. Try again.";
 	}
-
 }
 
 "Better luck next time";

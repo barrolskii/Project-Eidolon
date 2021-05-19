@@ -4,9 +4,12 @@ syntax keyword phantomTodos TODO XXX FIXME NOTE
 syntax keyword phantomKeywords
 	\ var
 	\ if
+	\ else
 	\ loop
 	\ func
 	\ exit
+	\ stdin
+	\ rand
 
 " Match Phantom number types
 syntax match phantomNumber "\v<\d+>"
@@ -16,6 +19,9 @@ syntax match phantomNumber "\v<\d+\.\d+>"
 syntax region phantomString start=/"/ skip=/\\"/ end=/"/ oneline contains=phantomInterpolatedWrapper
 syntax region phantomInterpolatedWrapper start="\v\\\(\s*" end="\v\s*\)" contained containedin=phantomString contains=phantomInterpolatedString
 syntax match phantomInterpolatedString "\v\w+(\(\))?" contained containedin=phantomInterpolatedWrapper
+
+" Match comments
+syntax match phantomComment "#.*$" contains=phantomTodos
 
 " Set highlights
 highlight default link phantomTodos Todo
