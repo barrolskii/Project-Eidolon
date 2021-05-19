@@ -1,14 +1,20 @@
+# Variable declarations
 var foo = 2;
 var bar = 3.14;
 var bip = "Hello, World!";
 
+# You don't need to use print to get the value of a variable
 foo;
 bar;
 bip;
 
+# Variables also support expressions
 var bap = 1 + 2 * 3 / 4;
 bap;
 
+# You can also assign variables from other variables
 var bop = bap;
 bop;
+
+# Variables that don't exist will cause an error
 yip;
